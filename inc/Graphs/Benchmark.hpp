@@ -7,10 +7,7 @@
 namespace Graphs
 {
 class Graph;
-} // namespace Graphs
 
-namespace Graph
-{
 class Benchmark
 {
 public:
@@ -40,4 +37,4 @@ public:
 
     ~Benchmark() {}
 };
-} // namespace Graph
+} // namespace Graphs

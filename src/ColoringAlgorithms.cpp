@@ -17,8 +17,9 @@ Permutation prepareNodePermutationForGreedyColoring(const Graph& graph)
 }
 
 ColorId
-findAvailableColorForCurrentNode(const Graph& graph, ColoringResult& coloring, ColoringResult::iterator currentNode)
+findAvailableColorForCurrentNode(const Graph& graph, ColoringResult& result, ColoringVector::iterator currentNode)
 {
+    auto [_, coloring] = result;
     auto isNeighbor = [&graph, &currentNode](auto neighbor) {
         static auto neighbors = graph.getNeighborsOf(currentNode->first);
 

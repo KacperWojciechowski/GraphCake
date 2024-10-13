@@ -1,5 +1,6 @@
 set(UT_SOURCES AdjMatrixTest.cpp
-               AdjListTest.cpp)
+               AdjListTest.cpp
+               ColoringAlgorithmsTest.cpp)
 
 add_executable(Ut ${UT_SOURCES})
 target_include_directories(Ut PUBLIC ${PROJECT_SOURCE_DIR}/inc ${PROJECT_SOURCE_DIR}/test/inc)
