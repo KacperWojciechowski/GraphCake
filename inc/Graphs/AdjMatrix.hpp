@@ -44,7 +44,7 @@ private:
 
     std::map<NodeId, uint32_t> nodeIndexMapping;
 
-    using Row = std::vector<uint32_t>;
+    using Row = std::vector<int32_t>;
     std::vector<Row> matrix;
 };
 } // namespace Graphs

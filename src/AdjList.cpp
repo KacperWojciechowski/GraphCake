@@ -115,7 +115,7 @@ std::string AdjList::show() const
 
 uint32_t AdjList::nodesAmount() const
 {
-    return static_cast<uint32_t>(this->nodeMap.size());
+    return static_cast<uint32_t>(nodes.size());
 }
 
 uint32_t AdjList::nodeDegree(NodeId node) const
@@ -365,9 +365,9 @@ void AdjList::addNodes(uint32_t nodesAmount)
 
     for (uint32_t i = 0; i < nodesAmount; i++)
     {
-        nodeMap.insert({highestId + i, nodes.size() + i});
+        nodeMap.insert({highestId + i + 1, nodes.size() + i});
     }
-    nodes.resize(nodes.size() + nodesAmount);
+    nodes.resize(nodeMap.size());
 }
 
 void AdjList::removeNode(NodeId node)
@@ -379,9 +379,16 @@ void AdjList::removeNode(NodeId node)
         return;
     }
 
-    std::ranges::remove_if(nodes, [this, &nodeMapping](auto& neighbors) {
-        return neighbors == nodes[nodeMapping->second];
+    std::ranges::for_each(nodes, [&nodeMapping](auto& neighbors) {
+        std::ranges::remove(neighbors, nodeMapping->first);
     });
+    std::ranges::for_each(nodeMap, [&nodeMapping](auto& mapping) {
+        if (mapping.second > nodeMapping->first)
+        {
+            --mapping.second;
+        }
+    });
+    nodes.erase(std::next(nodes.begin() + nodeMapping->second));
     nodeMap.erase(nodeMapping);
 }
 
