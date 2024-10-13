@@ -338,8 +338,8 @@ void AdjList::setEdge(const EdgeInfo& edge)
         return;
     }
 
-    addNeighborAndSortRange(nodes[sourceNodeMapping->second], edge.destination);
-    // TODO: addNeighborAndSortRange(nodes[destinationNodeMapping->second], edge.source);
+    addNeighborAndSortRange(nodes[sourceNodeMapping->second], destinationNodeMapping->first);
+    addNeighborAndSortRange(nodes[destinationNodeMapping->second], sourceNodeMapping->first);
 }
 
 void AdjList::removeEdge(const EdgeInfo& edge)
@@ -378,55 +378,19 @@ void AdjList::removeNode(NodeId node)
         return;
     }
 
-    std::cout << node << " \n";
-
-    std::ranges::for_each(nodes, [](auto& elem) {
-        std::ranges::for_each(elem, [](auto& neighbor) {
-            std::cout << neighbor << " ";
-        });
-        std::cout << std::endl;
-    });
-
     std::ranges::for_each(nodes, [&nodeMapping](auto& neighbors) {
         auto subrangeToRemove = std::ranges::remove(neighbors, nodeMapping->first);
         neighbors.erase(subrangeToRemove.begin(), subrangeToRemove.end());
     });
 
-    std::ranges::for_each(nodes, [](auto& elem) {
-        std::ranges::for_each(elem, [](auto& neighbor) {
-            std::cout << neighbor << " ";
-        });
-        std::cout << std::endl;
-    });
-
     std::ranges::for_each(nodeMap, [&nodeMapping](auto& mapping) {
-        if (mapping.second > nodeMapping->first)
+        if (mapping.second > nodeMapping->second)
         {
             --mapping.second;
         }
     });
-
-    std::ranges::for_each(nodes, [](auto& elem) {
-        std::ranges::for_each(elem, [](auto& neighbor) {
-            std::cout << neighbor << " ";
-        });
-        std::cout << std::endl;
-    });
     nodes.erase(std::next(nodes.begin(), nodeMapping->second));
-    std::ranges::for_each(nodes, [](auto& elem) {
-        std::ranges::for_each(elem, [](auto& neighbor) {
-            std::cout << neighbor << " ";
-        });
-        std::cout << std::endl;
-    });
-    std::ranges::for_each(nodeMap, [&nodeMapping](auto& mapping) {
-        std::cout << mapping.first << " " << mapping.second << std::endl;
-    });
     nodeMap.erase(nodeMapping);
-
-    std::ranges::for_each(nodeMap, [&nodeMapping](auto& mapping) {
-        std::cout << mapping.first << " " << mapping.second << std::endl;
-    });
 }
 
 EdgeInfo AdjList::findEdge(const EdgeInfo& edge) const
@@ -434,18 +398,17 @@ EdgeInfo AdjList::findEdge(const EdgeInfo& edge) const
     auto source = nodeMap.find(edge.source);
     auto destination = nodeMap.find(edge.destination);
 
-    if (source == this->nodeMap.end() or destination == this->nodeMap.end())
+    if (source == nodeMap.end() or destination == nodeMap.end())
     {
         return {edge.source, edge.destination, std::nullopt};
     }
 
-    auto neighbor = std::ranges::find(nodes[edge.source], edge.destination);
+    auto neighbor = std::ranges::find(nodes[source->second], edge.destination);
 
-    if (neighbor == std::end(nodes[edge.source]))
+    if (neighbor == std::end(nodes[source->second]))
     {
         return {edge.source, edge.destination, std::nullopt};
     }
-
     return {edge.source, edge.destination, 1};
 }
 

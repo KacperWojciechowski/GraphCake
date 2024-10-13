@@ -105,16 +105,16 @@ TEST_F(AdjListTest, getNeighborsOfReturnsCorrectNeighbors)
 TEST_F(AdjListTest, findEdgeReturnsCorrectEdgeInfo)
 {
     sut.addNodes(fourNodes);
-    sut.setEdge({firstNodeId, thirdNodeId, 5});
+    sut.setEdge({firstNodeId, thirdNodeId});
     EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).source, firstNodeId);
     EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).destination, thirdNodeId);
-    EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).weight, 5);
+    EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).weight, 1);
 }
 
 TEST_F(AdjListTest, findEdgeReturnsEmptyWeightIfEdgeDoesNotExist)
 {
     sut.addNodes(fourNodes);
-    sut.setEdge({firstNodeId, thirdNodeId, 5});
+    sut.setEdge({firstNodeId, thirdNodeId});
     EXPECT_EQ(sut.findEdge({firstNodeId, secondNodeId}).weight, std::nullopt);
 }
 
@@ -138,11 +138,11 @@ TEST_F(AdjListTest, canSetMultipleEdgesAtOnce)
 {
     sut.addNodes(fourNodes);
     sut.setEdges({
-        {firstNodeId,  thirdNodeId,  5},
-        {firstNodeId, secondNodeId, 10}
+        {firstNodeId,  thirdNodeId},
+        {firstNodeId, secondNodeId}
     });
-    EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).weight, 5);
-    EXPECT_EQ(sut.findEdge({firstNodeId, secondNodeId}).weight, 10);
+    EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).weight, 1);
+    EXPECT_EQ(sut.findEdge({firstNodeId, secondNodeId}).weight, 1);
 }
 
 TEST_F(AdjListTest, canSetMultipleEdgesAtOnceWithDefaultWeight)
@@ -192,16 +192,14 @@ TEST_F(AdjListTest, fetchingInformationForNonexistantEdgeDoesNotThrowAndReturnsE
 TEST_F(AdjListTest, nodesAfterRemovedNoteAreCorrectlyIdentifiedAfterRemoval)
 {
     sut.addNodes(threeNodes);
-    sut.setEdge({firstNodeId, secondNodeId, 1});
-    sut.setEdge({secondNodeId, thirdNodeId, 2});
-    sut.setEdge({thirdNodeId, firstNodeId, 3});
+    sut.setEdge({firstNodeId, secondNodeId});
+    sut.setEdge({secondNodeId, thirdNodeId});
+    sut.setEdge({thirdNodeId, firstNodeId});
     sut.removeNode(secondNodeId);
     EXPECT_EQ(sut.nodesAmount(), 2);
-    std::cout << "a\n";
     auto searchedEdge = sut.findEdge({thirdNodeId, firstNodeId});
-    std::cout << "b\n";
     EXPECT_TRUE(searchedEdge.weight.has_value());
-    EXPECT_EQ(searchedEdge.weight.value(), 3);
+    EXPECT_EQ(searchedEdge.weight.value(), 1);
 }
 
 } // namespace Graphs
