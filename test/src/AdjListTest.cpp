@@ -11,9 +11,9 @@ constexpr uint32_t oneNode = 1;
 constexpr uint32_t threeNodes = 3;
 constexpr uint32_t fourNodes = 4;
 
-constexpr Graphs::NodeId firstNodeId = 0;
-constexpr Graphs::NodeId secondNodeId = 1;
-constexpr Graphs::NodeId thirdNodeId = 2;
+constexpr Graphs::NodeId firstNodeId = 1;
+constexpr Graphs::NodeId secondNodeId = 2;
+constexpr Graphs::NodeId thirdNodeId = 3;
 } // namespace
 
 namespace Graphs
@@ -197,6 +197,11 @@ TEST_F(AdjListTest, nodesAfterRemovedNoteAreCorrectlyIdentifiedAfterRemoval)
     sut.setEdge({thirdNodeId, firstNodeId, 3});
     sut.removeNode(secondNodeId);
     EXPECT_EQ(sut.nodesAmount(), 2);
-    EXPECT_EQ(sut.findEdge({thirdNodeId, firstNodeId}).weight, 3);
+    std::cout << "a\n";
+    auto searchedEdge = sut.findEdge({thirdNodeId, firstNodeId});
+    std::cout << "b\n";
+    EXPECT_TRUE(searchedEdge.weight.has_value());
+    EXPECT_EQ(searchedEdge.weight.value(), 3);
 }
+
 } // namespace Graphs
