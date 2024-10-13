@@ -50,5 +50,10 @@ struct GreedyColoringTests : public testing::Test
     }
 };
 
-TEST_F(GreedyColoringTests, test) {}
+TEST_F(GreedyColoringTests, test)
+{
+    auto sampleGraph = createGraphWithChromaticNumber3();
+    (*sut)(sampleGraph);
+    EXPECT_EQ(result->)
+}
 } // namespace Graphs
