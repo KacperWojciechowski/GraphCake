@@ -105,7 +105,7 @@ TEST_F(AdjListTest, getNeighborsOfReturnsCorrectNeighbors)
 TEST_F(AdjListTest, findEdgeReturnsCorrectEdgeInfo)
 {
     sut.addNodes(fourNodes);
-    sut.setEdge({firstNodeId, thirdNodeId});
+    sut.setEdge({firstNodeId, thirdNodeId, 1});
     EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).source, firstNodeId);
     EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).destination, thirdNodeId);
     EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).weight, 1);
@@ -121,7 +121,7 @@ TEST_F(AdjListTest, findEdgeReturnsEmptyWeightIfEdgeDoesNotExist)
 TEST_F(AdjListTest, setEdgeAppliesDefaultWeightWhenNoWeightIsGiven)
 {
     sut.addNodes(fourNodes);
-    sut.setEdge({firstNodeId, thirdNodeId});
+    sut.setEdge({firstNodeId, thirdNodeId, 1});
     EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).weight, 1);
 }
 

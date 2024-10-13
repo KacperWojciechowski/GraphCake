@@ -104,7 +104,10 @@ std::string AdjList::show() const
         outStream << index << ": ";
         for (auto& neighbor : nodes[mapping])
         {
-            outStream << neighbor << ", ";
+            if (neighbor.weight.has_value())
+            {
+                outStream << neighbor.destination << "[weight=" << neighbor.weight.value() << "]" << ", ";
+            }
         }
         outStream << "\n";
     }
@@ -119,10 +122,6 @@ uint32_t AdjList::nodesAmount() const
 
 uint32_t AdjList::nodeDegree(NodeId node) const
 {
-    std::cout << "Test: ";
-    std::ranges::for_each(nodes[nodeMap.find(node)->second], [](auto& node) {
-        std::cout << node << " ";
-    });
     return nodes[nodeMap.find(node)->second].size();
 }
 
@@ -133,8 +132,13 @@ std::vector<NodeId> AdjList::getNeighborsOf(NodeId node) const
     {
         return {};
     }
+    std::vector<NodeId> neighbors;
+    for (auto& [_, dest, weight] : nodes[nodeMapping->second])
+    {
+        neighbors.push_back(dest);
+    }
 
-    return nodes[nodeMapping->second];
+    return neighbors;
 }
 
 // // algorytmy LF i SL  tworz� mapy posegregowane w odpowiedniaj kolejno�ci po
@@ -322,10 +326,22 @@ std::vector<NodeId> AdjList::getNeighborsOf(NodeId node) const
 // algorytmu greedy i zwr�cenie ilo�ci u�ytych kolor�w
 // }
 
-void AdjList::addNeighborAndSortRange(Neighbors& range, NodeId tgtNeighbor)
+void AdjList::addNeighborAndSortRange(Neighbors& range, EdgeInfo tgtNeighbor)
 {
-    range.emplace_back(tgtNeighbor);
-    std::ranges::sort(range);
+    auto element = std::ranges::find_if(range, [&tgtNeighbor](auto& elem) {
+        return elem.source == tgtNeighbor.source and elem.destination == tgtNeighbor.destination;
+    });
+    tgtNeighbor.weight = tgtNeighbor.weight.has_value() ? tgtNeighbor.weight.value() : 1;
+
+    if (element == range.end())
+    {
+        range.emplace_back(tgtNeighbor);
+        std::ranges::sort(range, std::less<>(), &EdgeInfo::destination);
+    }
+    else
+    {
+        element->weight = tgtNeighbor.weight.value();
+    }
 }
 
 void AdjList::setEdge(const EdgeInfo& edge)
@@ -337,9 +353,9 @@ void AdjList::setEdge(const EdgeInfo& edge)
     {
         return;
     }
-
-    addNeighborAndSortRange(nodes[sourceNodeMapping->second], destinationNodeMapping->first);
-    addNeighborAndSortRange(nodes[destinationNodeMapping->second], sourceNodeMapping->first);
+    addNeighborAndSortRange(nodes[sourceNodeMapping->second], edge);
+    addNeighborAndSortRange(nodes[destinationNodeMapping->second],
+                            {destinationNodeMapping->first, sourceNodeMapping->first, edge.weight});
 }
 
 void AdjList::removeEdge(const EdgeInfo& edge)
@@ -351,11 +367,15 @@ void AdjList::removeEdge(const EdgeInfo& edge)
         return;
     }
 
-    auto subrangeToRemove = std::ranges::remove(nodes[sourceNodeMapping->second], edge.destination);
-    nodes[sourceNodeMapping->second].erase(subrangeToRemove.begin(), subrangeToRemove.end());
+    auto [firstSrc, lastSrc] = std::ranges::remove_if(nodes[sourceNodeMapping->second], [&edge](auto& elem) {
+        return elem.destination == edge.destination;
+    });
+    nodes[sourceNodeMapping->second].erase(firstSrc, lastSrc);
 
-    subrangeToRemove = std::ranges::remove(nodes[destinationNodeMapping->second], edge.source);
-    nodes[destinationNodeMapping->second].erase(subrangeToRemove.begin(), subrangeToRemove.end());
+    auto [firstDst, lastDst] = std::ranges::remove_if(nodes[destinationNodeMapping->second], [&edge](auto& elem) {
+        return elem.destination == edge.source;
+    });
+    nodes[destinationNodeMapping->second].erase(firstDst, lastDst);
 }
 
 void AdjList::addNodes(uint32_t nodesAmount)
@@ -372,16 +392,18 @@ void AdjList::addNodes(uint32_t nodesAmount)
 void AdjList::removeNode(NodeId node)
 {
     auto nodeMapping = nodeMap.find(node);
-
     if (nodeMapping == nodeMap.end())
     {
         return;
     }
 
-    std::ranges::for_each(nodes, [&nodeMapping](auto& neighbors) {
-        auto subrangeToRemove = std::ranges::remove(neighbors, nodeMapping->first);
-        neighbors.erase(subrangeToRemove.begin(), subrangeToRemove.end());
-    });
+    for (auto& neighbors : nodes)
+    {
+        auto [first, last] = std::ranges::remove_if(neighbors, [&nodeMapping](auto& neighbor) {
+            return neighbor.destination == nodeMapping->first;
+        });
+        neighbors.erase(first, last);
+    }
 
     std::ranges::for_each(nodeMap, [&nodeMapping](auto& mapping) {
         if (mapping.second > nodeMapping->second)
@@ -403,13 +425,13 @@ EdgeInfo AdjList::findEdge(const EdgeInfo& edge) const
         return {edge.source, edge.destination, std::nullopt};
     }
 
-    auto neighbor = std::ranges::find(nodes[source->second], edge.destination);
+    auto neighbor = std::ranges::find(nodes[source->second], edge.destination, &EdgeInfo::destination);
 
     if (neighbor == std::end(nodes[source->second]))
     {
         return {edge.source, edge.destination, std::nullopt};
     }
-    return {edge.source, edge.destination, 1};
+    return {edge.source, edge.destination, neighbor->weight};
 }
 
 std::vector<NodeId> AdjList::getNodeIds() const

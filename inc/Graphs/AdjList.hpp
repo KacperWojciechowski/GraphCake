@@ -31,11 +31,11 @@ public:
 private:
     std::string show() const override;
 
-    using Neighbors = std::vector<uint32_t>;
+    using Neighbors = std::vector<EdgeInfo>;
 
     void buildFromLstFile(const std::string&);
-    void removeNeighborFromRange(Neighbors&, NodeId);
-    void addNeighborAndSortRange(Neighbors&, NodeId);
+    void removeNeighborFromRange(Neighbors&, EdgeInfo);
+    void addNeighborAndSortRange(Neighbors&, EdgeInfo);
 
     std::vector<Neighbors> nodes;
     std::map<NodeId, uint32_t> nodeMap;
