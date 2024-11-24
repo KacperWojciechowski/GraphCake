@@ -16,7 +16,7 @@ namespace Graphs
 {
 namespace
 {
-uint32_t findNodesCount(const std::string& fileContent, const std::regex& nodeRegex)
+/*uint32_t findNodesCount(const std::string& fileContent, const std::regex& nodeRegex)
 {
     std::smatch match;
     uint32_t nodesCount = 0;
@@ -27,9 +27,9 @@ uint32_t findNodesCount(const std::string& fileContent, const std::regex& nodeRe
         it = match.suffix().first;
     }
     return nodesCount;
-}
+}*/
 
-struct EdgeParsingResult
+/*struct EdgeParsingResult
 {
     bool result;
     EdgeInfo edge;
@@ -53,7 +53,7 @@ EdgeParsingResult findEdgeInFileContent(const std::string& fileContent,
         };
     }
     return {false, {}, itr};
-}
+}*/
 } // namespace
 
 void AdjMatrix::resizeMatrixToFitNodes(uint32_t nodesCount)
@@ -186,8 +186,10 @@ uint32_t AdjMatrix::nodeDegree(NodeId node) const
         return 0;
     }
 
+    auto& [_, index] = *nodeIndex;
+
     uint32_t degree = 0;
-    for (auto& elem : matrix[nodeIndex->second])
+    for (auto& elem : matrix[index])
     {
         if (elem != 0)
         {
@@ -301,8 +303,10 @@ void AdjMatrix::setEdge(const EdgeInfo& edge)
     {
         return;
     }
-    this->matrix[sourceNodeMapping->second][destinationNodeMapping->second]
-        = edge.weight.has_value() ? edge.weight.value() : 1;
+    auto& [_, sourceNodeIndex] = *sourceNodeMapping;
+    auto& [_, destinationNodeIndex] = *destinationNodeMapping;
+
+    this->matrix[sourceNodeIndex][destinationNodeIndex] = edge.weight.has_value() ? edge.weight.value() : 1;
 }
 
 void AdjMatrix::addNodes(uint32_t nodesCount)
@@ -318,44 +322,46 @@ void AdjMatrix::removeEdge(const EdgeInfo& edge)
     {
         return;
     }
-    matrix[sourceNodeMapping->second][destinationNodeMapping->second] = 0;
+    auto& [_, sourceNodeIndex] = *sourceNodeMapping;
+    auto& [_, destinationNodeIndex] = *destinationNodeMapping;
+    matrix[sourceNodeIndex][destinationNodeIndex] = 0;
 }
 
 void AdjMatrix::removeNode(NodeId node)
 {
-    auto nodeIndex = nodeIndexMapping.find(node);
-    if (nodeIndex == nodeIndexMapping.end())
+    auto nodeItr = nodeIndexMapping.find(node);
+    if (nodeItr == nodeIndexMapping.end())
     {
         return;
     }
 
-    for (auto& [_, index] : std::ranges::subrange(std::next(nodeIndex, 1), nodeIndexMapping.end()))
+    auto& [_, nodeIndex] = *nodeItr;
+    for (auto& [_, index] : std::ranges::subrange(std::next(nodeItr, 1), nodeIndexMapping.end()))
     {
-        if (index > nodeIndex->second)
+        if (index > nodeIndex)
         {
             index--;
         }
     }
 
-    matrix.erase(matrix.begin() + nodeIndex->second);
+    matrix.erase(matrix.begin() + nodeIndex);
     for (auto& row : matrix)
     {
-        row.erase(row.begin() + nodeIndex->second);
+        row.erase(row.begin() + nodeIndex);
     }
 
-    nodeIndexMapping.erase(nodeIndex);
+    nodeIndexMapping.erase(nodeItr);
 }
 
 std::string AdjMatrix::show() const
 {
     std::stringstream out;
-    out << "\nNodes amount = " << matrix.size() << "\n";
-    out << "[\n";
+    out << std::format("\nNodes amount = {}\n[\n", matrix.size());
     for (uint32_t i = 0; i < matrix.size(); i++)
     {
         for (uint32_t j = 0; j < matrix[i].size(); j++)
         {
-            out << this->matrix[i][j] << ", ";
+            out << std::format("{}, ", this->matrix[i][j]);
         }
         out << "\n";
     }
@@ -390,7 +396,10 @@ EdgeInfo AdjMatrix::findEdge(const EdgeInfo& edge) const
     {
         return {edge.source, edge.destination, std::nullopt};
     }
-    auto weight = matrix[sourceIterator->second][destinationIterator->second];
+    const auto& [_, sourceIndex] = *sourceIterator;
+    const auto& [_, destinationIndex] = *destinationIterator;
+
+    auto weight = matrix[sourceIndex][destinationIndex];
     return {edge.source, edge.destination, weight != 0 ? std::make_optional(weight) : std::nullopt};
 }
 

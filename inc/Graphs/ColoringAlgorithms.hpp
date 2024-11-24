@@ -28,6 +28,8 @@ public:
     GreedyColoring& operator=(const GreedyColoring&) = delete;
     GreedyColoring& operator=(GreedyColoring&&) = delete;
 
+    std::string getName() override;
+
     void operator()(const Graphs::Graph&) override;
 
 private:

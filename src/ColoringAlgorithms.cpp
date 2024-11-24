@@ -158,6 +158,12 @@ GreedyColoring<isVerbose>::GreedyColoring(std::shared_ptr<ColoringResult> result
     }
 }
 
+template <bool isVerbose>
+std::string GreedyColoring<isVerbose>::getName()
+{
+    return "Greedy coloring";
+}
+
 template class GreedyColoring<verbose>;
 template class GreedyColoring<notVerbose>;
 
