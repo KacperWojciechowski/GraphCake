@@ -20,16 +20,6 @@ struct GreedyColoringTests : public testing::Test
     std::shared_ptr<ColoringResult> result;
     std::unique_ptr<GreedyColoring<notVerbose>> sut;
 
-    /*    1: 2 6
-    2: 1 6
-    3: 4 7
-    4: 3 7
-    5: 8 9
-    6: 1 2 8
-    7: 3 4 9
-    8: 5 6 9
-    9: 5 7 8*/
-
     AdjMatrix createGraphWithChromaticNumber3()
     {
         AdjMatrix graph;
@@ -53,7 +43,8 @@ struct GreedyColoringTests : public testing::Test
 TEST_F(GreedyColoringTests, test)
 {
     auto sampleGraph = createGraphWithChromaticNumber3();
-    (*sut)(sampleGraph);
-    EXPECT_EQ(result->)
+    sut->operator()(sampleGraph);
+    auto& [colorId, _] = *result;
+    EXPECT_EQ(colorId, 3);
 }
 } // namespace Graphs
