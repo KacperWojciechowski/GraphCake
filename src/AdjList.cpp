@@ -42,7 +42,7 @@ namespace Graphs
 {
 AdjList::AdjList(const Graph& graph)
 {
-    nodes.resize(graph.nodesAmount());
+    nodes.reserve(graph.nodesAmount());
 
     for (uint32_t i = 0; i < nodes.size(); i++)
     {

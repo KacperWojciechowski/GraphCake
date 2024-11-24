@@ -197,11 +197,15 @@ TEST_F(AdjMatrixTest, nodesAfterRemovedNoteAreCorrectlyIdentifiedAfterRemoval)
     sut.setEdge({thirdNodeId, firstNodeId, 3});
     sut.removeNode(secondNodeId);
     EXPECT_EQ(sut.nodesAmount(), 2);
-    std::cout << "a\n";
     auto searchedEdge = sut.findEdge({thirdNodeId, firstNodeId});
-    std::cout << "b\n";
     EXPECT_TRUE(searchedEdge.weight.has_value());
     EXPECT_EQ(searchedEdge.weight.value(), 3);
 }
 
+TEST_F(AdjMatrixTest, gettingNodesListOfGraphWithOnlyOneNodeHasOnlyOneElement)
+{
+    sut.addNodes(oneNode);
+    auto nodes = sut.getNodeIds();
+    EXPECT_THAT(nodes, ElementsAre(firstNodeId));
+}
 } // namespace Graphs

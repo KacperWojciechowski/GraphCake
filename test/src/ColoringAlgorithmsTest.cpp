@@ -20,6 +20,18 @@ struct GreedyColoringTests : public testing::Test
     std::shared_ptr<ColoringResult> result;
     std::unique_ptr<GreedyColoring<notVerbose>> sut;
 
+    AdjMatrix createEmptyGraph()
+    {
+        return AdjMatrix{};
+    }
+
+    AdjMatrix createGraphWithOnlyOneNode()
+    {
+        AdjMatrix graph;
+        graph.addNodes(1);
+        return graph;
+    }
+
     AdjMatrix createGraphWithChromaticNumber3()
     {
         AdjMatrix graph;
@@ -40,11 +52,27 @@ struct GreedyColoringTests : public testing::Test
     }
 };
 
-TEST_F(GreedyColoringTests, test)
+TEST_F(GreedyColoringTests, greedyColoringOnGraphWithChromaticNumber3Returns3)
 {
     auto sampleGraph = createGraphWithChromaticNumber3();
     sut->operator()(sampleGraph);
     auto& [colorId, _] = *result;
     EXPECT_EQ(colorId, 3);
+}
+
+TEST_F(GreedyColoringTests, greedyColoringOnEmptyGraphReturnsMaxColor)
+{
+    auto sampleGraph = createEmptyGraph();
+    sut->operator()(sampleGraph);
+    auto& [colorId, _] = *result;
+    EXPECT_EQ(colorId, std::numeric_limits<ColorId>::max());
+}
+
+TEST_F(GreedyColoringTests, greedyColoringOnGraphWithOneNodeReturnsMinimalColor)
+{
+    auto sampleGraph = createGraphWithOnlyOneNode();
+    sut->operator()(sampleGraph);
+    auto& [colorId, _] = *result;
+    EXPECT_EQ(colorId, std::numeric_limits<ColorId>::min());
 }
 } // namespace Graphs

@@ -202,4 +202,11 @@ TEST_F(AdjListTest, nodesAfterRemovedNoteAreCorrectlyIdentifiedAfterRemoval)
     EXPECT_EQ(searchedEdge.weight.value(), 1);
 }
 
+TEST_F(AdjListTest, gettingNodesListOfGraphWithOnlyOneNodeHasOnlyOneElement)
+{
+    sut.addNodes(oneNode);
+    auto nodes = sut.getNodeIds();
+    EXPECT_THAT(nodes, ElementsAre(firstNodeId));
+}
+
 } // namespace Graphs

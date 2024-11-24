@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <Graphs/Algorithm.hpp>
 #include <iosfwd>
 #include <memory>
@@ -30,10 +31,7 @@ public:
     void operator()(const Graphs::Graph&) override;
 
 private:
-    template <class... Args>
-    void log(std::string, Args...) const;
-
     std::shared_ptr<ColoringResult> result = {};
-    [[maybe_unused]] std::ostream& outStream;
+    [[maybe_unused]] std::unique_ptr<std::ostream, std::function<void(std::ostream*)>> outStream = {};
 };
 } // namespace Graphs::Algorithm

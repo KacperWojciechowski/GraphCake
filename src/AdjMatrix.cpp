@@ -396,7 +396,7 @@ EdgeInfo AdjMatrix::findEdge(const EdgeInfo& edge) const
 
 std::vector<NodeId> AdjMatrix::getNodeIds() const
 {
-    std::vector<NodeId> nodeIds;
+    std::vector<NodeId> nodeIds = {};
     for (const auto& [node, _] : nodeIndexMapping)
     {
         nodeIds.push_back(node);
@@ -406,27 +406,36 @@ std::vector<NodeId> AdjMatrix::getNodeIds() const
 
 std::vector<NodeId> AdjMatrix::getNeighborsOf(NodeId node) const
 {
-    std::vector<NodeId> neighbors;
     auto nodeIndex = nodeIndexMapping.find(node);
+    if (nodeIndex == nodeIndexMapping.end())
+    {
+        return {};
+    }
 
-    auto mappingFinder = [this](auto value) {
-        return std::ranges::find_if(nodeIndexMapping, [value](const auto& elem) {
-            return elem.second == value;
+    auto mappingFinder = [this](auto target) {
+        return std::ranges::find_if(nodeIndexMapping, [target](const auto& elem) {
+            auto& [_, index] = elem;
+            return index == target;
         });
     };
 
-    for (uint32_t i = 0; i < matrix[nodeIndex->second].size(); i++)
+    const auto& [_, index] = *nodeIndex;
+
+    std::vector<NodeId> neighbors = {};
+    for (uint32_t i = 0; i < matrix[index].size(); i++)
     {
-        if (matrix[nodeIndex->second][i] != 0)
+        if (matrix[index][i] != 0)
         {
-            neighbors.push_back(mappingFinder(i)->first);
+            const auto& [nodeId, _] = *mappingFinder(i);
+            neighbors.push_back(nodeId);
         }
     }
     for (uint32_t i = 0; i < matrix.size(); i++)
     {
-        if (matrix[i][nodeIndex->second] != 0 and neighbors.end() == std::ranges::find(neighbors, i))
+        if (matrix[i][index] != 0 and neighbors.end() == std::ranges::find(neighbors, i))
         {
-            neighbors.push_back(mappingFinder(i)->first);
+            const auto& [nodeId, _] = *mappingFinder(i);
+            neighbors.push_back(nodeId);
         }
     }
     std::ranges::sort(neighbors);

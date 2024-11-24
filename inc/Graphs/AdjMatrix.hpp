@@ -42,9 +42,9 @@ private:
     void buildFromGraphMLFile(const std::string&);
     void resizeMatrixToFitNodes(uint32_t);
 
-    std::map<NodeId, uint32_t> nodeIndexMapping;
-
     using Row = std::vector<int32_t>;
-    std::vector<Row> matrix;
+
+    std::map<NodeId, uint32_t> nodeIndexMapping = {};
+    std::vector<Row> matrix = {};
 };
 } // namespace Graphs
