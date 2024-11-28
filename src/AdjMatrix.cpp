@@ -58,7 +58,7 @@ EdgeParsingResult findEdgeInFileContent(const std::string& fileContent,
 
 void AdjMatrix::resizeMatrixToFitNodes(uint32_t nodesCount)
 {
-    assert(nodesCount > matrix.size());
+    assert(nodesCount >= matrix.size());
 
     auto nodesAmountDiff = nodesCount - matrix.size();
     auto maxNodeItr = nodeIndexMapping.rbegin();
@@ -306,7 +306,7 @@ void AdjMatrix::setEdge(const EdgeInfo& edge)
     auto& [_, sourceNodeIndex] = *sourceNodeMapping;
     auto& [_, destinationNodeIndex] = *destinationNodeMapping;
 
-    this->matrix[sourceNodeIndex][destinationNodeIndex] = edge.weight.has_value() ? edge.weight.value() : 1;
+    this->matrix[sourceNodeIndex][destinationNodeIndex] = edge.weight.value_or(1);
 }
 
 void AdjMatrix::addNodes(uint32_t nodesCount)

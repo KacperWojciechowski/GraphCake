@@ -37,6 +37,12 @@ TEST_F(AdjMatrixTest, addingNodesIncreasesNodesAmount)
     EXPECT_EQ(sut.nodesAmount(), 4);
 }
 
+TEST_F(AdjMatrixTest, removingNonExistantNodeDoesNotThrow)
+{
+    sut.addNodes(oneNode);
+    EXPECT_NO_THROW(sut.removeNode(thirdNodeId));
+}
+
 TEST_F(AdjMatrixTest, removingNodesDecreasesNodesAmount)
 {
     sut.addNodes(fourNodes);

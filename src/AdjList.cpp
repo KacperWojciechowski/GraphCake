@@ -360,7 +360,6 @@ void AdjList::setEdge(const EdgeInfo& edge)
     auto& [destinationNodeId, destinationNodeIndex] = *destinationNodeMapping;
 
     addNeighborAndSortRange(nodes[sourceNodeIndex], edge);
-    addNeighborAndSortRange(nodes[destinationNodeIndex], {destinationNodeId, sourceNodeId, edge.weight});
 }
 
 void AdjList::removeEdge(const EdgeInfo& edge)

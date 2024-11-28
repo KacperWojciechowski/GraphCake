@@ -9,13 +9,13 @@ namespace Graphs
 {
 class Graph;
 
-template <typename T, typename Guard = std::enable_if_t<std::is_base_of_v<Graph, T>>>
+template <typename GraphType, typename Guard = std::enable_if_t<std::is_base_of_v<Graph, GraphType>>>
 class Deserializer
 {
 public:
-    static T deserializeLstFile(std::ifstream& filePath);
-    static T deserializeMatFile(std::ifstream& filePath);
-    static T deserializeGraphMlFile(std::ifstream& filePath);
+    static GraphType deserializeLstFile(std::istream& filePath);
+    static GraphType deserializeMatFile(std::istream& filePath);
+    // static GraphType deserializeGraphMlFile(std::istream& filePath);
 };
 
 template class Deserializer<AdjList>;
