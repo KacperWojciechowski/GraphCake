@@ -321,13 +321,17 @@ std::vector<NodeId> AdjList::getNeighborsOf(NodeId node) const
 
 void AdjList::addNeighborAndSortRange(Neighbors& range, EdgeInfo tgtNeighbor)
 {
+    if (not tgtNeighbor.weight.has_value())
+    {
+        throw std::invalid_argument("Weight must be provided");
+    }
+
     auto element = std::ranges::find_if(range, [&tgtNeighbor](auto& elem) {
         auto& [source, destination, _] = elem;
         auto& [tgtSource, tgtDestination, _] = tgtNeighbor;
 
         return source == tgtSource and destination == tgtDestination;
     });
-    tgtNeighbor.weight = tgtNeighbor.weight.has_value() ? tgtNeighbor.weight.value() : 1;
 
     if (element == range.end())
     {
@@ -336,7 +340,7 @@ void AdjList::addNeighborAndSortRange(Neighbors& range, EdgeInfo tgtNeighbor)
     }
     else
     {
-        element->weight = tgtNeighbor.weight.value();
+        element->weight = tgtNeighbor.weight;
     }
 }
 
@@ -352,7 +356,7 @@ void AdjList::setEdge(const EdgeInfo& edge)
     auto& [sourceNodeId, sourceNodeIndex] = *sourceNodeMapping;
     auto& [destinationNodeId, destinationNodeIndex] = *destinationNodeMapping;
 
-    addNeighborAndSortRange(nodes[sourceNodeIndex], edge);
+    addNeighborAndSortRange(nodes[sourceNodeIndex], {edge.source, edge.destination, edge.weight.value_or(1)});
 }
 
 void AdjList::removeEdge(const EdgeInfo& edge)

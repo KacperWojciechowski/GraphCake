@@ -1,8 +1,8 @@
 #pragma once
 
-#include <fstream>
 #include <Graphs/AdjList.hpp>
 #include <Graphs/AdjMatrix.hpp>
+#include <iosfwd>
 #include <type_traits>
 
 namespace Graphs
@@ -15,7 +15,7 @@ class Deserializer
 public:
     static GraphType deserializeLstFile(std::istream& filePath);
     static GraphType deserializeMatFile(std::istream& filePath);
-    // static GraphType deserializeGraphMlFile(std::istream& filePath);
+    static GraphType deserializeGraphMlFile(std::istream& filePath);
 };
 
 template class Deserializer<AdjList>;

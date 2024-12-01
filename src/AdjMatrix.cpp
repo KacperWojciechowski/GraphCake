@@ -1,37 +1,28 @@
-// this
-#include <Graphs/AdjList.hpp>
-#include <Graphs/AdjMatrix.hpp>
-
-// libraries
 #include <algorithm>
-#include <cassert>
-#include <filesystem>
-#include <fstream>
-#include <ranges>
-#include <regex>
+#include <Graphs/AdjMatrix.hpp>
 #include <sstream>
-#include <string>
 
 namespace Graphs
 {
 
 void AdjMatrix::resizeMatrixToFitNodes(uint32_t nodesCount)
 {
-    assert(nodesCount >= matrix.size());
-
-    auto nodesAmountDiff = nodesCount - matrix.size();
-    auto maxNodeItr = nodeIndexMapping.rbegin();
-    auto maxNodeId = maxNodeItr != nodeIndexMapping.rend() ? maxNodeItr->first : 0;
-
-    for (uint32_t i = 0; i < nodesAmountDiff; i++)
+    if (nodesCount > matrix.size())
     {
-        nodeIndexMapping.insert(std::make_pair(maxNodeId + i + 1, matrix.size() + i));
-    }
+        auto nodesAmountDiff = nodesCount - matrix.size();
+        auto maxNodeItr = nodeIndexMapping.rbegin();
+        auto maxNodeId = maxNodeItr != nodeIndexMapping.rend() ? maxNodeItr->first : 0;
 
-    matrix.resize(nodesCount);
-    for (auto& row : matrix)
-    {
-        row.resize(nodesCount);
+        for (uint32_t i = 0; i < nodesAmountDiff; i++)
+        {
+            nodeIndexMapping.insert(std::make_pair(maxNodeId + i + 1, matrix.size() + i));
+        }
+
+        matrix.resize(nodesCount);
+        for (auto& row : matrix)
+        {
+            row.resize(nodesCount);
+        }
     }
 }
 

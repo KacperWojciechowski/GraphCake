@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns
 	http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
- <graph id="Graph" edgedefault="undirected">
+  <graph id="Graph" edgedefault="undirected">
 	<node id="n0"/>
 	<node id="n1"/>
 	<node id="n2"/>

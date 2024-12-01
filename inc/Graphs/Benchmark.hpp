@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <Graphs/Algorithm.hpp>
 #include <Graphs/Graph.hpp>
 #include <iosfwd>
