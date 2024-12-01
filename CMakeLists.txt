@@ -6,11 +6,6 @@ set(CMAKE_CXX_FLAGS "-std=c++2c")
 add_subdirectory(src)
 add_subdirectory(test)
 
-add_executable(Graphs main.cpp)
-target_include_directories(Graphs PUBLIC ${PROJECT_SOURCE_DIR}/inc)
-
-target_link_libraries(Graphs PRIVATE Sources)
-
 find_program(CLANG_FORMAT "clang-format")
 
 if (CLANG_FORMAT)

@@ -6,12 +6,6 @@
 #include <string>
 #include <vector>
 
-/*namespace Data
-{
-void generate_weighted_graph(std::string file_path, unsigned int nodes_amount);
-void generate_throughtput(std::string input_file_path, std::string output_file_path, unsigned int nodes_amount);
-}*/ // namespace Data
-
 namespace Graphs
 {
 class AdjMatrix : public Graph
