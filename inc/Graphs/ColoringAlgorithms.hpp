@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <functional>
 #include <Graphs/Algorithm.hpp>
+#include <Graphs/Graph.hpp>
 #include <iosfwd>
 #include <memory>
 #include <tuple>

@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <Graphs/Deserializer.hpp>
+#include <Graphs/Graph.hpp>
 #include <iostream>
 #include <regex>
 #include <vector>
@@ -30,9 +31,9 @@ std::vector<uint32_t> parseLstLine(const std::string& line)
     return neighbors;
 }
 
-std::vector<uint32_t> parseMatLine(const std::string& line)
+std::vector<Graphs::WeightType> parseMatLine(const std::string& line)
 {
-    std::vector<uint32_t> weights = {};
+    std::vector<Graphs::WeightType> weights = {};
     std::stringstream stream(line);
     std::string value = {};
 
@@ -42,7 +43,7 @@ std::vector<uint32_t> parseMatLine(const std::string& line)
         {
             continue;
         }
-        weights.emplace_back(std::stoul(value));
+        weights.emplace_back(std::stoi(value));
     }
     return weights;
 }
@@ -64,11 +65,16 @@ class ContentIntoGraphRepresentationParser<GraphType, FileType::MAT>
 public:
     static GraphType parse(const std::string& content)
     {
+        if (content.empty())
+        {
+            return GraphType{};
+        }
+
         using regItr = std::sregex_iterator;
         std::regex matLineRegex("([0-9 ]+)");
-        std::vector<std::vector<uint32_t>> weights;
+        std::vector<std::vector<Graphs::WeightType>> weights;
 
-        for (auto itr = regItr(content.begin(), content.end(), matLineRegex)++; itr != regItr(); ++itr)
+        for (auto itr = regItr(content.begin(), content.end(), matLineRegex); itr != regItr(); ++itr)
         {
             if (itr->size() < 1)
             {
@@ -101,11 +107,16 @@ class ContentIntoGraphRepresentationParser<GraphType, FileType::LST>
 public:
     static GraphType parse(const std::string& content)
     {
+        if (content.empty())
+        {
+            return GraphType{};
+        }
+
         using regItr = std::sregex_iterator;
         std::regex nodeRegex("[0-9]:([0-9 ]+)");
-        std::vector<std::vector<uint32_t>> nodes;
+        std::vector<std::vector<Graphs::NodeId>> nodes;
 
-        for (auto itr = regItr(content.begin(), content.end(), nodeRegex)++; itr != regItr(); ++itr)
+        for (auto itr = regItr(content.begin(), content.end(), nodeRegex); itr != regItr(); ++itr)
         {
             if (itr->size() < 2)
             {
@@ -139,7 +150,6 @@ GraphType Deserializer<GraphType, Guard>::deserializeLstFile(std::istream& file)
         std::cerr << "[Deserializer] Error when accessing file";
         return GraphType{};
     }
-
     auto fileContent = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     return ContentIntoGraphRepresentationParser<GraphType, FileType::LST>::parse(fileContent);
 }
@@ -152,7 +162,6 @@ GraphType Deserializer<GraphType, Guard>::deserializeMatFile(std::istream& file)
         std::cerr << "[Deserializer] Error when accessing file";
         return GraphType{};
     }
-
     auto fileContent = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     return ContentIntoGraphRepresentationParser<GraphType, FileType::MAT>::parse(fileContent);
 }

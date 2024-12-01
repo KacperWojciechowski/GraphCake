@@ -33,7 +33,6 @@ private:
 
     using Neighbors = std::vector<EdgeInfo>;
 
-    void buildFromLstFile(const std::string&);
     void removeNeighborFromRange(Neighbors&, EdgeInfo);
     void addNeighborAndSortRange(Neighbors&, EdgeInfo);
 

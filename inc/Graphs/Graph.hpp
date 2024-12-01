@@ -8,12 +8,13 @@
 namespace Graphs
 {
 using NodeId = uint32_t;
+using WeightType = int32_t;
 
 struct EdgeInfo
 {
     NodeId source;
     NodeId destination;
-    std::optional<int32_t> weight;
+    std::optional<WeightType> weight;
 };
 
 class GraphReader

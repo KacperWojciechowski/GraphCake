@@ -65,4 +65,14 @@ TYPED_TEST(DeserializerTest, deserializingEmptyLstFileReturnsEmptyGraph)
 
     EXPECT_EQ(graph.nodesAmount(), 0);
 }
+
+TYPED_TEST(DeserializerTest, deserializingInvalidFileReturnsEmptyGraph)
+{
+    std::string fileContent = "invalid content";
+    std::stringstream mockStream(fileContent);
+
+    auto graph = this->sut.deserializeLstFile(mockStream);
+
+    EXPECT_EQ(graph.nodesAmount(), 0);
+}
 } // namespace Graphs

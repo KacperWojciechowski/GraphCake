@@ -1,8 +1,8 @@
 #pragma once
 
-#include <fstream>
 #include <Graphs/AdjList.hpp>
 #include <Graphs/AdjMatrix.hpp>
+#include <iosfwd>
 #include <type_traits>
 
 namespace Graphs

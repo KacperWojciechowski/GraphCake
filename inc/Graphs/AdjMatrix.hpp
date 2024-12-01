@@ -32,11 +32,9 @@ public:
 
 private:
     std::string show() const override;
-    void buildFromMatFile(const std::string&);
-    void buildFromGraphMLFile(const std::string&);
     void resizeMatrixToFitNodes(uint32_t);
 
-    using Row = std::vector<int32_t>;
+    using Row = std::vector<WeightType>;
 
     std::map<NodeId, uint32_t> nodeIndexMapping = {};
     std::vector<Row> matrix = {};
