@@ -15,7 +15,7 @@ class Deserializer
 public:
     static GraphType deserializeLstFile(std::istream& filePath);
     static GraphType deserializeMatFile(std::istream& filePath);
-    // static GraphType deserializeGraphMlFile(std::istream& filePath);
+    static GraphType deserializeGraphMlFile(std::istream& filePath);
 };
 
 template class Deserializer<AdjList>;
