@@ -1,5 +1,5 @@
 #include <gmock/gmock.h>
-#include <Graphs/AdjMatrix.hpp>
+#include <Graphs/AdjList.hpp>
 #include <gtest/gtest.h>
 #include <string>
 
@@ -18,18 +18,18 @@ constexpr Graphs::NodeId thirdNodeId = 3;
 
 namespace Graphs
 {
-class AdjMatrixTest : public testing::Test
+class AdjListTest : public testing::Test
 {
 protected:
-    AdjMatrix sut;
+    AdjList sut;
 };
 
-TEST_F(AdjMatrixTest, constructorCreatesAnEmptyGraph)
+TEST_F(AdjListTest, constructorCreatesAnEmptyGraph)
 {
     EXPECT_EQ(sut.nodesAmount(), 0);
 }
 
-TEST_F(AdjMatrixTest, addingNodesIncreasesNodesAmount)
+TEST_F(AdjListTest, addingNodesIncreasesNodesAmount)
 {
     sut.addNodes(oneNode);
     EXPECT_EQ(sut.nodesAmount(), 1);
@@ -37,13 +37,7 @@ TEST_F(AdjMatrixTest, addingNodesIncreasesNodesAmount)
     EXPECT_EQ(sut.nodesAmount(), 4);
 }
 
-TEST_F(AdjMatrixTest, removingNonExistantNodeDoesNotThrow)
-{
-    sut.addNodes(oneNode);
-    EXPECT_NO_THROW(sut.removeNode(thirdNodeId));
-}
-
-TEST_F(AdjMatrixTest, removingNodesDecreasesNodesAmount)
+TEST_F(AdjListTest, removingNodesDecreasesNodesAmount)
 {
     sut.addNodes(fourNodes);
     sut.removeNode(thirdNodeId);
@@ -52,7 +46,7 @@ TEST_F(AdjMatrixTest, removingNodesDecreasesNodesAmount)
     EXPECT_EQ(sut.nodesAmount(), 2);
 }
 
-TEST_F(AdjMatrixTest, removingNodeWhichHasBeenAlreadyRemovedDoesNotThrowAndDoesNotRemoveAnyNodes)
+TEST_F(AdjListTest, removingNodeWhichHasBeenAlreadyRemovedDoesNotThrowAndDoesNotRemoveAnyNodes)
 {
     sut.addNodes(fourNodes);
     sut.removeNode(thirdNodeId);
@@ -61,7 +55,7 @@ TEST_F(AdjMatrixTest, removingNodeWhichHasBeenAlreadyRemovedDoesNotThrowAndDoesN
     EXPECT_EQ(sut.nodesAmount(), 3);
 }
 
-TEST_F(AdjMatrixTest, removingNodeRemovesAllEdgesConnectedToIt)
+TEST_F(AdjListTest, removingNodeRemovesAllEdgesConnectedToIt)
 {
     sut.addNodes(fourNodes);
     sut.setEdge({firstNodeId, thirdNodeId});
@@ -70,7 +64,7 @@ TEST_F(AdjMatrixTest, removingNodeRemovesAllEdgesConnectedToIt)
     EXPECT_EQ(sut.nodeDegree(firstNodeId), 0);
 }
 
-TEST_F(AdjMatrixTest, addingEdgeIncreasesNodeDegree)
+TEST_F(AdjListTest, addingEdgeIncreasesNodeDegree)
 {
     sut.addNodes(fourNodes);
     EXPECT_EQ(sut.nodeDegree(firstNodeId), 0);
@@ -78,7 +72,7 @@ TEST_F(AdjMatrixTest, addingEdgeIncreasesNodeDegree)
     EXPECT_EQ(sut.nodeDegree(firstNodeId), 1);
 }
 
-TEST_F(AdjMatrixTest, removingEdgeDecreasesNodeDegree)
+TEST_F(AdjListTest, removingEdgeDecreasesNodeDegree)
 {
     sut.addNodes(fourNodes);
     sut.setEdge({firstNodeId, thirdNodeId});
@@ -88,7 +82,7 @@ TEST_F(AdjMatrixTest, removingEdgeDecreasesNodeDegree)
     EXPECT_EQ(sut.nodeDegree(firstNodeId), 1);
 }
 
-TEST_F(AdjMatrixTest, removingEdgeWhichHasBeenAlreadyRemovedDoesNotThrowAndDoesNotRemoveAnyEdges)
+TEST_F(AdjListTest, removingEdgeWhichHasBeenAlreadyRemovedDoesNotThrowAndDoesNotRemoveAnyEdges)
 {
     sut.addNodes(fourNodes);
     sut.setEdge({firstNodeId, thirdNodeId});
@@ -100,7 +94,7 @@ TEST_F(AdjMatrixTest, removingEdgeWhichHasBeenAlreadyRemovedDoesNotThrowAndDoesN
     EXPECT_EQ(sut.nodeDegree(firstNodeId), 1);
 }
 
-TEST_F(AdjMatrixTest, getNeighborsOfReturnsCorrectNeighbors)
+TEST_F(AdjListTest, getNeighborsOfReturnsCorrectNeighbors)
 {
     sut.addNodes(fourNodes);
     sut.setEdge({firstNodeId, thirdNodeId});
@@ -108,30 +102,30 @@ TEST_F(AdjMatrixTest, getNeighborsOfReturnsCorrectNeighbors)
     EXPECT_THAT(sut.getNeighborsOf(firstNodeId), ElementsAre(secondNodeId, thirdNodeId));
 }
 
-TEST_F(AdjMatrixTest, findEdgeReturnsCorrectEdgeInfo)
+TEST_F(AdjListTest, findEdgeReturnsCorrectEdgeInfo)
 {
     sut.addNodes(fourNodes);
-    sut.setEdge({firstNodeId, thirdNodeId, 5});
+    sut.setEdge({firstNodeId, thirdNodeId, 1});
     EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).source, firstNodeId);
     EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).destination, thirdNodeId);
-    EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).weight, 5);
-}
-
-TEST_F(AdjMatrixTest, findEdgeReturnsEmptyWeightIfEdgeDoesNotExist)
-{
-    sut.addNodes(fourNodes);
-    sut.setEdge({firstNodeId, thirdNodeId, 5});
-    EXPECT_EQ(sut.findEdge({firstNodeId, secondNodeId}).weight, std::nullopt);
-}
-
-TEST_F(AdjMatrixTest, setEdgeAppliesDefaultWeightWhenNoWeightIsGiven)
-{
-    sut.addNodes(fourNodes);
-    sut.setEdge({firstNodeId, thirdNodeId});
     EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).weight, 1);
 }
 
-TEST_F(AdjMatrixTest, setEdgeUpdatesWeightWhenEdgeAlreadyExists)
+TEST_F(AdjListTest, findEdgeReturnsEmptyWeightIfEdgeDoesNotExist)
+{
+    sut.addNodes(fourNodes);
+    sut.setEdge({firstNodeId, thirdNodeId});
+    EXPECT_EQ(sut.findEdge({firstNodeId, secondNodeId}).weight, std::nullopt);
+}
+
+TEST_F(AdjListTest, setEdgeAppliesDefaultWeightWhenNoWeightIsGiven)
+{
+    sut.addNodes(fourNodes);
+    sut.setEdge({firstNodeId, thirdNodeId, 1});
+    EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).weight, 1);
+}
+
+TEST_F(AdjListTest, setEdgeUpdatesWeightWhenEdgeAlreadyExists)
 {
     sut.addNodes(fourNodes);
     sut.setEdge({firstNodeId, thirdNodeId, 5});
@@ -140,18 +134,7 @@ TEST_F(AdjMatrixTest, setEdgeUpdatesWeightWhenEdgeAlreadyExists)
     EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).weight, 10);
 }
 
-TEST_F(AdjMatrixTest, canSetMultipleEdgesAtOnce)
-{
-    sut.addNodes(fourNodes);
-    sut.setEdges({
-        {firstNodeId,  thirdNodeId,  5},
-        {firstNodeId, secondNodeId, 10}
-    });
-    EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).weight, 5);
-    EXPECT_EQ(sut.findEdge({firstNodeId, secondNodeId}).weight, 10);
-}
-
-TEST_F(AdjMatrixTest, canSetMultipleEdgesAtOnceWithDefaultWeight)
+TEST_F(AdjListTest, canSetMultipleEdgesAtOnce)
 {
     sut.addNodes(fourNodes);
     sut.setEdges({
@@ -162,7 +145,18 @@ TEST_F(AdjMatrixTest, canSetMultipleEdgesAtOnceWithDefaultWeight)
     EXPECT_EQ(sut.findEdge({firstNodeId, secondNodeId}).weight, 1);
 }
 
-TEST_F(AdjMatrixTest, canUpdateMultipleEdges)
+TEST_F(AdjListTest, canSetMultipleEdgesAtOnceWithDefaultWeight)
+{
+    sut.addNodes(fourNodes);
+    sut.setEdges({
+        {firstNodeId,  thirdNodeId},
+        {firstNodeId, secondNodeId}
+    });
+    EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).weight, 1);
+    EXPECT_EQ(sut.findEdge({firstNodeId, secondNodeId}).weight, 1);
+}
+
+TEST_F(AdjListTest, canUpdateMultipleEdges)
 {
     sut.addNodes(fourNodes);
     sut.setEdges({
@@ -179,14 +173,14 @@ TEST_F(AdjMatrixTest, canUpdateMultipleEdges)
     EXPECT_EQ(sut.findEdge({firstNodeId, secondNodeId}).weight, 5);
 }
 
-TEST_F(AdjMatrixTest, settingEdgeBetweenNonexistantNodesDoesNotDoAnything)
+TEST_F(AdjListTest, settingEdgeBetweenNonexistantNodesDoesNotDoAnything)
 {
     sut.addNodes(oneNode);
     EXPECT_NO_THROW(sut.setEdge({firstNodeId, thirdNodeId}));
     EXPECT_EQ(sut.nodeDegree(firstNodeId), 0);
 }
 
-TEST_F(AdjMatrixTest, fetchingInformationForNonexistantEdgeDoesNotThrowAndReturnsEmptyWeight)
+TEST_F(AdjListTest, fetchingInformationForNonexistantEdgeDoesNotThrowAndReturnsEmptyWeight)
 {
     sut.addNodes(oneNode);
     EXPECT_NO_THROW(sut.findEdge({firstNodeId, thirdNodeId}));
@@ -195,23 +189,24 @@ TEST_F(AdjMatrixTest, fetchingInformationForNonexistantEdgeDoesNotThrowAndReturn
     EXPECT_EQ(sut.findEdge({firstNodeId, thirdNodeId}).destination, thirdNodeId);
 }
 
-TEST_F(AdjMatrixTest, nodesAfterRemovedNoteAreCorrectlyIdentifiedAfterRemoval)
+TEST_F(AdjListTest, nodesAfterRemovedNoteAreCorrectlyIdentifiedAfterRemoval)
 {
     sut.addNodes(threeNodes);
-    sut.setEdge({firstNodeId, secondNodeId, 1});
-    sut.setEdge({secondNodeId, thirdNodeId, 2});
-    sut.setEdge({thirdNodeId, firstNodeId, 3});
+    sut.setEdge({firstNodeId, secondNodeId});
+    sut.setEdge({secondNodeId, thirdNodeId});
+    sut.setEdge({thirdNodeId, firstNodeId});
     sut.removeNode(secondNodeId);
     EXPECT_EQ(sut.nodesAmount(), 2);
     auto searchedEdge = sut.findEdge({thirdNodeId, firstNodeId});
     EXPECT_TRUE(searchedEdge.weight.has_value());
-    EXPECT_EQ(searchedEdge.weight.value(), 3);
+    EXPECT_EQ(searchedEdge.weight.value(), 1);
 }
 
-TEST_F(AdjMatrixTest, gettingNodesListOfGraphWithOnlyOneNodeHasOnlyOneElement)
+TEST_F(AdjListTest, gettingNodesListOfGraphWithOnlyOneNodeHasOnlyOneElement)
 {
     sut.addNodes(oneNode);
     auto nodes = sut.getNodeIds();
     EXPECT_THAT(nodes, ElementsAre(firstNodeId));
 }
+
 } // namespace Graphs

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Graphs/Graph.hpp>
-#include <Graphs/Pixel_map.hpp>
 #include <map>
 #include <string>
 
@@ -9,14 +8,11 @@ namespace Graphs
 {
 class AdjList : public Graph
 {
-    public:
-    AdjList(std::string);
-
+public:
+    AdjList() = default;
     AdjList(const Graph&);
-    // AdjList(const Data::Pixel_map&);
-
-    AdjList(AdjList&) = delete;
-    AdjList(AdjList&&) = delete;
+    AdjList(AdjList&) = default;
+    AdjList(AdjList&&) = default;
 
     uint32_t nodesAmount() const override;
     uint32_t nodeDegree(NodeId) const override;
@@ -32,14 +28,14 @@ class AdjList : public Graph
 
     virtual ~AdjList() = default;
 
-    private:
+private:
     std::string show() const override;
 
-    using Neighbors = std::vector<uint32_t>;
+    using Neighbors = std::vector<EdgeInfo>;
 
     void buildFromLstFile(const std::string&);
-    void removeNeighborFromRange(Neighbors&, NodeId);
-    void addNeighborAndSortRange(Neighbors&, NodeId);
+    void removeNeighborFromRange(Neighbors&, EdgeInfo);
+    void addNeighborAndSortRange(Neighbors&, EdgeInfo);
 
     std::vector<Neighbors> nodes;
     std::map<NodeId, uint32_t> nodeMap;

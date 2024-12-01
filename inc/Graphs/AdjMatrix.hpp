@@ -2,25 +2,20 @@
 
 #include <cstdint>
 #include <Graphs/Graph.hpp>
+#include <map>
 #include <string>
 #include <vector>
-
-/*namespace Data
-{
-void generate_weighted_graph(std::string file_path, unsigned int nodes_amount);
-void generate_throughtput(std::string input_file_path, std::string output_file_path, unsigned int nodes_amount);
-}*/ // namespace Data
 
 namespace Graphs
 {
 class AdjMatrix : public Graph
 {
-    public:
-    AdjMatrix(std::string);
+public:
+    AdjMatrix() = default;
     AdjMatrix(const Graph&);
 
-    AdjMatrix(AdjMatrix&) = delete;
-    AdjMatrix(AdjMatrix&&) = delete;
+    AdjMatrix(AdjMatrix&) = default;
+    AdjMatrix(AdjMatrix&&) = default;
 
     uint32_t nodesAmount() const override;
     uint32_t nodeDegree(NodeId) const override;
@@ -35,15 +30,15 @@ class AdjMatrix : public Graph
 
     virtual ~AdjMatrix() = default;
 
-    private:
+private:
     std::string show() const override;
     void buildFromMatFile(const std::string&);
     void buildFromGraphMLFile(const std::string&);
     void resizeMatrixToFitNodes(uint32_t);
 
-    std::map<NodeId, uint32_t> nodeIndexMapping;
+    using Row = std::vector<int32_t>;
 
-    using Row = std::vector<uint32_t>;
-    std::vector<Row> matrix;
+    std::map<NodeId, uint32_t> nodeIndexMapping = {};
+    std::vector<Row> matrix = {};
 };
 } // namespace Graphs

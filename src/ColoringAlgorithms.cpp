@@ -1,39 +1,82 @@
+#include <algorithm>
 #include <format>
 #include <Graphs/Algorithm.hpp>
 #include <Graphs/ColoringAlgorithms.hpp>
 #include <memory>
 #include <random>
 #include <ranges>
+#include <stdexcept>
 
 namespace Graphs::Algorithm
 {
 namespace
 {
-Permutation prepareNodePermutationForGreedyColoring(const Graph& graph) {
-    auto nodeIds = graph.getNodeIds();
-    std::shuffle(nodeIds.begin(), nodeIds.end(), std::random_device{});
-    return nodeIds;
+void ostreamDeleter(std::ostream* out)
+{
+    if (out != &std::cout)
+    {
+        delete out;
+    }
 }
 
-ColorId
-findAvailableColorForCurrentNode(const Graph& graph, ColoringResult& coloring, ColoringResult::iterator currentNode) {
+template <bool isVerbose, class... Args>
+void log(std::ostream& outStream, std::string formatString, Args... args)
+{
+    if constexpr (not isVerbose)
+    {
+        return;
+    }
+    else
+    {
+        if constexpr (sizeof...(args) == 0)
+        {
+            outStream << formatString;
+        }
+        else
+        {
+            outStream << std::vformat(formatString, std::make_format_args(args...));
+        }
+    }
+}
+
+template <bool isVerbose>
+void printPermutationOfNodes(std::ostream& out, const Permutation& nodes)
+{
+    if (nodes.empty())
+    {
+        log<isVerbose>(out, "Empty permutation\n");
+        return;
+    }
+
+    auto distance = std::ranges::distance(nodes);
+    for (const auto& nodeId : nodes | std::views::take(distance - 1))
+    {
+        log<isVerbose>(out, "{}, ", nodeId);
+    }
+    log<isVerbose>(out, "{}\n", nodes.back());
+}
+
+ColorId colorPredicate(const ColoringInfo& info)
+{
+    auto& [_, color] = info;
+    return color;
+}
+
+ColorId findAvailableColorForCurrentNode(const Graph& graph, ColoringVector& coloring, NodeId currentNode)
+{
     auto isNeighbor = [&graph, &currentNode](auto neighbor) {
-        static auto neighbors = graph.getNeighborsOf(currentNode->first);
+        auto neighbors = graph.getNeighborsOf(currentNode);
+        auto& [neighborId, _] = neighbor;
 
-        return std::ranges::find(neighbors, neighbor.first) != neighbors.end();
+        return std::ranges::find(neighbors, neighborId) != neighbors.end();
     };
 
-    auto neighborsColoringView
-        = std::ranges::subrange(coloring.begin(), coloring.end()) | std::views::filter(isNeighbor);
+    auto neighborsColoringView = coloring | std::views::filter(isNeighbor);
     std::size_t neighborsCount = std::ranges::distance(neighborsColoringView);
-
-    auto colorFilter = [](const auto& coloring) {
-        return coloring.second;
-    };
 
     for (const auto& color : std::views::iota(0u, neighborsCount))
     {
-        if (std::ranges::find(neighborsColoringView, color, colorFilter) == neighborsColoringView.end())
+        if (std::ranges::find(neighborsColoringView, color, colorPredicate) == neighborsColoringView.end())
         {
             return color;
         }
@@ -41,33 +84,10 @@ findAvailableColorForCurrentNode(const Graph& graph, ColoringResult& coloring, C
     return neighborsCount + 1;
 }
 
-ColoringResult resizeAndInitializeResultStructure(const Permutation& nodes) {
-    auto result = ColoringResult{};
-    result.resize(nodes.size());
-    for (std::size_t i = 0; i < nodes.size(); i++)
-    {
-        result[i].first = nodes[i];
-        result[i].second = std::numeric_limits<ColorId>::max();
-    }
-    return result;
-}
-} // namespace
-
-template <>
-template <class... Args, class T, Verbose<verbose, T>>
-void GreedyColoring<verbose>::log(std::string formatString, Args... args) const {
-    if constexpr (sizeof...(args) == 0)
-    {
-        outStream << formatString;
-    }
-    else
-    {
-        outStream << std::vformat(formatString, std::make_format_args(args...));
-    }
-}
-
-std::vector<std::pair<NodeId, ColorId>> createColoringTable(const Permutation& nodes) {
-    std::vector<std::pair<NodeId, ColorId>> coloring;
+ColoringVector createColoringTable(const Permutation& nodes)
+{
+    ColoringVector coloring = {};
+    coloring.reserve(nodes.size());
     for (const auto& nodeId : nodes)
     {
         coloring.emplace_back(nodeId, std::numeric_limits<ColorId>::max());
@@ -75,46 +95,76 @@ std::vector<std::pair<NodeId, ColorId>> createColoringTable(const Permutation& n
     return coloring;
 }
 
-template <>
-void GreedyColoring<verbose>::operator()(const Graphs::Graph& graph) {
-    log("Greedy coloring graph with {} nodes\n", graph.nodesAmount());
+ColoringResult resizeAndInitializeResultStructure(const Permutation& nodes)
+{
+    auto [colorId, coloringVector] = ColoringResult{};
+    coloringVector = createColoringTable(nodes);
+    colorId = std::numeric_limits<ColorId>::max();
+    return std::tie(colorId, coloringVector);
+}
+} // namespace
 
-    auto nodes = prepareNodePermutationForGreedyColoring(graph);
+template <bool isVerbose>
+void GreedyColoring<isVerbose>::operator()(const Graphs::Graph& graph)
+{
+    log<isVerbose>(*outStream, "Greedy coloring graph with {} nodes\n", graph.nodesAmount());
+    auto nodes = graph.getNodeIds();
 
-    log("Generated permutation of nodes: ");
-    for (const auto& nodeId : nodes)
-    {
-        log("{}, ", nodeId);
-    }
-    log("\n");
+    log<isVerbose>(*outStream, "Generated permutation of nodes: ");
+    printPermutationOfNodes<isVerbose>(*outStream, nodes);
 
+    log<isVerbose>(*outStream, "{}\n", nodes.size());
     *result = resizeAndInitializeResultStructure(nodes);
-    result->front().second = 0;
+    auto& [maxColor, coloring] = *result;
 
-    log("Coloring node {} with color {}\n", result->front().first, result->front().second);
-
-    for (auto currentNode = ++result->begin(); currentNode != result->end(); currentNode++)
+    for (auto& elem : coloring)
     {
-        auto color = findAvailableColorForCurrentNode(graph, *result, currentNode);
-
-        currentNode->second = color;
-        log("Coloring node {} with color {}\n", currentNode->first, currentNode->second);
+        log<isVerbose>(*outStream, "Node: {}, Color: {}\n", elem.first, elem.second);
     }
 
-    log("Greedy coloring completed\n");
+    if (nodes.empty())
+    {
+        log<isVerbose>(*outStream, "Graph is empty, coloring is not possible\n");
+        return;
+    }
+
+    auto& [frontNodeId, frontNodeColor] = coloring.front();
+    frontNodeColor = 0u;
+
+    log<isVerbose>(*outStream, "Coloring node {} with color {}\n", frontNodeId, frontNodeColor);
+
+    for (auto& [nodeId, nodeColor] : coloring | std::views::drop(1))
+    {
+        auto color = findAvailableColorForCurrentNode(graph, coloring, nodeId);
+
+        nodeColor = color;
+        log<isVerbose>(*outStream, "Coloring node {} with color {}\n", nodeId, nodeColor);
+    }
+
+    auto [_, maxColorId] = std::ranges::max(coloring, std::ranges::less{}, colorPredicate);
+    maxColor = maxColorId;
+
+    log<isVerbose>(*outStream, "Greedy coloring completed\n");
 }
 
-template <>
-void GreedyColoring<notVerbose>::operator()(const Graphs::Graph& graph) {
-    auto nodes = prepareNodePermutationForGreedyColoring(graph);
-    *result = resizeAndInitializeResultStructure(nodes);
-    result->front().second = 0;
-
-    for (auto currentNode = ++result->begin(); currentNode != result->end(); currentNode++)
+template <bool isVerbose>
+GreedyColoring<isVerbose>::GreedyColoring(std::shared_ptr<ColoringResult> resultContainer, std::ostream& out)
+    : result(std::move(resultContainer)), outStream{&out, ostreamDeleter}
+{
+    if (not result)
     {
-        auto color = findAvailableColorForCurrentNode(graph, *result, currentNode);
-
-        currentNode->second = color;
+        log<isVerbose>(*outStream, "Coloring result cannot be null");
+        throw std::invalid_argument{"Coloring result cannot be null"};
     }
 }
+
+template <bool isVerbose>
+std::string GreedyColoring<isVerbose>::getName()
+{
+    return "Greedy coloring";
+}
+
+template class GreedyColoring<verbose>;
+template class GreedyColoring<notVerbose>;
+
 } // namespace Graphs::Algorithm

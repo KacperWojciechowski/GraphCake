@@ -4,13 +4,16 @@
 
 namespace Graphs::Algorithm
 {
-using Permutation = std::vector<NodeId>;
 class AlgorithmFunctor
 {
-    public:
+public:
+    virtual std::string getName() = 0;
     virtual void operator()(const Graphs::Graph&) = 0;
     virtual ~AlgorithmFunctor() = default;
 };
+
+using AlgorithmsCollection = std::vector<AlgorithmFunctor*>;
+using Permutation = std::vector<NodeId>;
 
 template <bool isVerbose, class T>
 using Verbose = typename std::enable_if_t<isVerbose, T>*;
