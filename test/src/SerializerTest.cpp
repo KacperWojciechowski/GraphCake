@@ -39,4 +39,14 @@ TYPED_TEST(SerializerTest, canSerializeMatFiles)
 
     EXPECT_EQ(mockStream.str(), fileContent);
 }
+
+TYPED_TEST(SerializerTest, canSerializeGraphMlFiles)
+{
+    auto [fileContent, referenceGraph] = makeSampleGraphMlFile<TypeParam>();
+    std::stringstream mockStream = {};
+
+    SerializerTest<TypeParam>::sut::serializeGraphMlFile(mockStream, referenceGraph);
+
+    EXPECT_EQ(mockStream.str(), fileContent);
+}
 } // namespace Graphs
