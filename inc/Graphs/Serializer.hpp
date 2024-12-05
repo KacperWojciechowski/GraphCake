@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Graphs/AdjList.hpp>
-#include <Graphs/AdjMatrix.hpp>
 #include <iosfwd>
 #include <type_traits>
 

@@ -1,9 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <compare>
 #include <cstdint>
 #include <iostream>
 #include <optional>
+#include <ranges>
 #include <vector>
 
 namespace Graphs
@@ -32,7 +34,20 @@ public:
     virtual uint32_t nodesAmount() const = 0;
     virtual uint32_t nodeDegree(NodeId) const = 0;
     virtual std::vector<NodeId> getNodeIds() const = 0;
-    virtual std::vector<NodeId> getNeighborsOf(NodeId) const = 0;
+    virtual std::vector<NodeId> getOutgoingNeighborsOf(NodeId) const = 0;
+    virtual std::vector<NodeId> getIncommingNeighborsOf(NodeId) const = 0;
+
+    virtual std::vector<NodeId> getNeighborsOf(NodeId node) const
+    {
+        auto neighbors = getOutgoingNeighborsOf(node);
+        auto inNeighborsView = getIncommingNeighborsOf(node) | std::views::filter([neighbors](auto& elem) {
+                                   return std::ranges::find(neighbors, elem) == neighbors.end();
+                               });
+
+        std::ranges::copy(inNeighborsView, std::back_inserter(neighbors));
+        std::ranges::sort(neighbors);
+        return neighbors;
+    }
 
     auto operator<=>(const GraphReader& other) const
     {

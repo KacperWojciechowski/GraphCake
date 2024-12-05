@@ -105,8 +105,24 @@ TYPED_TEST(GraphRepresentationsTests, getNeighborsOfReturnsCorrectNeighbors)
 {
     this->sut.addNodes(fourNodes);
     this->sut.setEdge({firstNodeId, thirdNodeId});
-    this->sut.setEdge({firstNodeId, secondNodeId});
+    this->sut.setEdge({secondNodeId, firstNodeId});
     EXPECT_THAT(this->sut.getNeighborsOf(firstNodeId), ElementsAre(secondNodeId, thirdNodeId));
+}
+
+TYPED_TEST(GraphRepresentationsTests, getOutgoingNeighborsOfReturnsOnlyTheOutgoingNeighbors)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+    this->sut.setEdge({secondNodeId, firstNodeId});
+    EXPECT_THAT(this->sut.getOutgoingNeighborsOf(firstNodeId), ElementsAre(thirdNodeId));
+}
+
+TYPED_TEST(GraphRepresentationsTests, getIncommingNeighborsOfReturnsOnlyTheIncommingNeighbors)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+    this->sut.setEdge({secondNodeId, firstNodeId});
+    EXPECT_THAT(this->sut.getIncommingNeighborsOf(firstNodeId), ElementsAre(secondNodeId));
 }
 
 TYPED_TEST(GraphRepresentationsTests, findEdgeReturnsCorrectEdgeInfo)

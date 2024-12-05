@@ -118,7 +118,7 @@ uint32_t AdjList::nodeDegree(NodeId node) const
     return nodes[nodeMap.find(node)->second].size();
 }
 
-std::vector<NodeId> AdjList::getNeighborsOf(NodeId node) const
+std::vector<NodeId> AdjList::getOutgoingNeighborsOf(NodeId node) const
 {
     auto nodeMapping = nodeMap.find(node);
     if (nodeMapping == nodeMap.end())
@@ -134,6 +134,29 @@ std::vector<NodeId> AdjList::getNeighborsOf(NodeId node) const
     return neighbors;
 }
 
+std::vector<NodeId> AdjList::getIncommingNeighborsOf(NodeId node) const
+{
+    auto nodeMapping = nodeMap.find(node);
+    if (nodeMapping == nodeMap.end())
+    {
+        return {};
+    }
+    auto& [tgtNodeIndex, _] = *nodeMapping;
+    std::vector<NodeId> neighbors;
+    for (auto& node : nodes)
+    {
+        if (std::ranges::find_if(node,
+                                 [tgtNodeIndex](auto& neighbor) {
+                                     return neighbor.destination == tgtNodeIndex;
+                                 })
+            != node.end())
+        {
+            neighbors.emplace_back(node[0].source);
+        }
+    }
+
+    return neighbors;
+}
 // // algorytmy LF i SL  tworz� mapy posegregowane w odpowiedniaj kolejno�ci po
 // kt�rych p�niej iteruje greedy. Mapa to lista z wierzcho�k�w posegregowana
 // odpowiednio,
