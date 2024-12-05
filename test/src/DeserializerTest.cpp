@@ -1,49 +1,79 @@
 #include <gmock/gmock.h>
 #include <Graphs/Deserializer.hpp>
 #include <gtest/gtest.h>
+#include <tuple>
 
 using namespace testing;
 
 namespace Graphs
 {
-template <typename T>
+template <typename GraphType>
 struct DeserializerTest : public testing::Test
 {
     DeserializerTest() = default;
 
-    std::string makeSampleGraphMlFile()
+    std::tuple<std::string, GraphType> makeSampleGraphMlFile()
     {
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-               "<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"\n"
-               "   xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
-               "   xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns\n"
-               "   http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd\">\n"
-               "   <graph id=\"Graph\" edgedefault=\"undirected\">\n"
-               "       <node id=\"n0\"/>\n"
-               "       <node id=\"n1\"/>\n"
-               "       <node id=\"n2\"/>\n"
-               "       <node id=\"n3\"/>\n"
-               "       <node id=\"n4\"/>\n"
-               "       <edge source=\"n0\" target=\"n1\"/>\n"
-               "       <edge source=\"n1\" target=\"n0\"/>\n"
-               "       <edge source=\"n2\" target=\"n3\"/>\n"
-               "       <edge source=\"n3\" target=\"n2\"/>\n"
-               "   </graph>\n"
-               "</graphml>\n";
+        auto streamContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                             "<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"\n"
+                             "   xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+                             "   xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns\n"
+                             "   http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd\">\n"
+                             "   <graph id=\"Graph\" edgedefault=\"undirected\">\n"
+                             "       <node id=\"n0\"/>\n"
+                             "       <node id=\"n1\"/>\n"
+                             "       <node id=\"n2\"/>\n"
+                             "       <node id=\"n3\"/>\n"
+                             "       <node id=\"n4\"/>\n"
+                             "       <edge source=\"n0\" target=\"n1\"/>\n"
+                             "       <edge source=\"n1\" target=\"n0\"/>\n"
+                             "       <edge source=\"n2\" target=\"n3\"/>\n"
+                             "       <edge source=\"n3\" target=\"n2\"/>\n"
+                             "   </graph>\n"
+                             "</graphml>\n";
+        GraphType graphRep = {};
+        graphRep.addNodes(5);
+        graphRep.setEdge({.source = 1, .destination = 2});
+        graphRep.setEdge({.source = 2, .destination = 1});
+        graphRep.setEdge({.source = 3, .destination = 4});
+        graphRep.setEdge({.source = 4, .destination = 3});
+
+        return std::tie(streamContent, graphRep);
     }
 
-    std::string makeSampleLstFile()
+    std::tuple<std::string, GraphType> makeSampleLstFile()
     {
-        return "1: 1 3\n"
-               "2: 1\n"
-               "3: 2 3\n";
+        auto streamContent = "1: 1 3\n"
+                             "2: 1\n"
+                             "3: 2 3\n";
+        GraphType graphRep = {};
+        graphRep.addNodes(3);
+        graphRep.setEdge({.source = 1, .destination = 1});
+        graphRep.setEdge({.source = 1, .destination = 3});
+        graphRep.setEdge({.source = 2, .destination = 1});
+        graphRep.setEdge({.source = 3, .destination = 2});
+        graphRep.setEdge({.source = 3, .destination = 3});
+
+        return std::tie(streamContent, graphRep);
     }
 
-    std::string makeSampleMatFile()
+    std::tuple<std::string, GraphType> makeSampleMatFile()
     {
-        return "1 1 3\n"
-               "2 1 0\n"
-               "0 2 3\n";
+        auto streamContent = "1 1 3\n"
+                             "2 1 0\n"
+                             "0 2 3\n";
+
+        GraphType graphRep = {};
+        graphRep.addNodes(3);
+        graphRep.setEdge({.source = 1, .destination = 1});
+        graphRep.setEdge({.source = 1, .destination = 2});
+        graphRep.setEdge({.source = 1, .destination = 3, .weight = 3});
+        graphRep.setEdge({.source = 2, .destination = 1, .weight = 2});
+        graphRep.setEdge({.source = 2, .destination = 2});
+        graphRep.setEdge({.source = 3, .destination = 2, .weight = 2});
+        graphRep.setEdge({.source = 3, .destination = 3, .weight = 3});
+
+        return std::tie(streamContent, graphRep);
     }
 
     std::string makeMalformedMatFile()
@@ -53,7 +83,7 @@ struct DeserializerTest : public testing::Test
                "0 2 3\n";
     }
 
-    Deserializer<T> sut = {};
+    Deserializer<GraphType> sut = {};
 };
 
 using GraphTypes = ::testing::Types<AdjList, AdjMatrix>;
@@ -62,54 +92,32 @@ TYPED_TEST_SUITE(DeserializerTest, GraphTypes);
 
 TYPED_TEST(DeserializerTest, canDeserializeLstFile)
 {
-    std::string fileContent = this->makeSampleLstFile();
+    auto [fileContent, referenceGraph] = this->makeSampleLstFile();
     std::stringstream mockStream(fileContent);
 
     auto graph = this->sut.deserializeLstFile(mockStream);
 
-    EXPECT_EQ(graph.nodesAmount(), 3);
-    EXPECT_EQ(graph.findEdge({1, 1}).weight, 1);
-    EXPECT_EQ(graph.findEdge({1, 2}).weight, std::nullopt);
-    EXPECT_EQ(graph.findEdge({1, 3}).weight, 1);
-    EXPECT_EQ(graph.findEdge({2, 1}).weight, 1);
-    EXPECT_EQ(graph.findEdge({2, 2}).weight, std::nullopt);
-    EXPECT_EQ(graph.findEdge({2, 3}).weight, std::nullopt);
-    EXPECT_EQ(graph.findEdge({3, 1}).weight, std::nullopt);
-    EXPECT_EQ(graph.findEdge({3, 2}).weight, 1);
-    EXPECT_EQ(graph.findEdge({3, 3}).weight, 1);
+    EXPECT_EQ(graph.operator<=>(referenceGraph), std::strong_ordering::equal);
 }
 
 TYPED_TEST(DeserializerTest, canDeserializeMatFile)
 {
-    std::string fileContent = this->makeSampleMatFile();
+    auto [fileContent, referenceGraph] = this->makeSampleMatFile();
     std::stringstream mockStream(fileContent);
 
     auto graph = this->sut.deserializeMatFile(mockStream);
 
-    EXPECT_EQ(graph.nodesAmount(), 3);
-    EXPECT_EQ(graph.findEdge({1, 1}).weight, 1);
-    EXPECT_EQ(graph.findEdge({1, 2}).weight, 1);
-    EXPECT_EQ(graph.findEdge({1, 3}).weight, 3);
-    EXPECT_EQ(graph.findEdge({2, 1}).weight, 2);
-    EXPECT_EQ(graph.findEdge({2, 2}).weight, 1);
-    EXPECT_EQ(graph.findEdge({2, 3}).weight, std::nullopt);
-    EXPECT_EQ(graph.findEdge({3, 1}).weight, std::nullopt);
-    EXPECT_EQ(graph.findEdge({3, 2}).weight, 2);
-    EXPECT_EQ(graph.findEdge({3, 3}).weight, 3);
+    EXPECT_EQ(graph, referenceGraph);
 }
 
 TYPED_TEST(DeserializerTest, canDeserializeGraphMlFile)
 {
-    std::string fileContent = this->makeSampleGraphMlFile();
+    auto [fileContent, referenceGraph] = this->makeSampleGraphMlFile();
     std::stringstream mockStream(fileContent);
 
     auto graph = this->sut.deserializeGraphMlFile(mockStream);
 
-    EXPECT_EQ(graph.nodesAmount(), 5);
-    EXPECT_EQ(graph.findEdge({1, 2}).weight, 1);
-    EXPECT_EQ(graph.findEdge({2, 1}).weight, 1);
-    EXPECT_EQ(graph.findEdge({3, 4}).weight, 1);
-    EXPECT_EQ(graph.findEdge({4, 3}).weight, 1);
+    EXPECT_EQ(graph, referenceGraph);
 }
 
 TYPED_TEST(DeserializerTest, deserializingEmptyLstFileReturnsEmptyGraph)
@@ -119,7 +127,7 @@ TYPED_TEST(DeserializerTest, deserializingEmptyLstFileReturnsEmptyGraph)
 
     auto graph = this->sut.deserializeLstFile(mockStream);
 
-    EXPECT_EQ(graph.nodesAmount(), 0);
+    EXPECT_EQ(graph, decltype(graph){});
 }
 
 TYPED_TEST(DeserializerTest, deserializingEmptyMatFileReturnsEmptyGraph)
@@ -129,7 +137,7 @@ TYPED_TEST(DeserializerTest, deserializingEmptyMatFileReturnsEmptyGraph)
 
     auto graph = this->sut.deserializeMatFile(mockStream);
 
-    EXPECT_EQ(graph.nodesAmount(), 0);
+    EXPECT_EQ(graph, decltype(graph){});
 }
 
 TYPED_TEST(DeserializerTest, deserializingEmptyGraphMlFileReturnsEmptyGraph)
@@ -139,7 +147,7 @@ TYPED_TEST(DeserializerTest, deserializingEmptyGraphMlFileReturnsEmptyGraph)
 
     auto graph = this->sut.deserializeGraphMlFile(mockStream);
 
-    EXPECT_EQ(graph.nodesAmount(), 0);
+    EXPECT_EQ(graph, decltype(graph){});
 }
 
 TYPED_TEST(DeserializerTest, deserializingInvalidLstFileReturnsEmptyGraph)
@@ -149,7 +157,7 @@ TYPED_TEST(DeserializerTest, deserializingInvalidLstFileReturnsEmptyGraph)
 
     auto graph = this->sut.deserializeLstFile(mockStream);
 
-    EXPECT_EQ(graph.nodesAmount(), 0);
+    EXPECT_EQ(graph, decltype(graph){});
 }
 
 TYPED_TEST(DeserializerTest, deserializingInvalidMatFileReturnsEmptyGraph)
@@ -159,7 +167,7 @@ TYPED_TEST(DeserializerTest, deserializingInvalidMatFileReturnsEmptyGraph)
 
     auto graph = this->sut.deserializeMatFile(mockStream);
 
-    EXPECT_EQ(graph.nodesAmount(), 0);
+    EXPECT_EQ(graph, decltype(graph){});
 }
 
 TYPED_TEST(DeserializerTest, deserializingInvalidGraphMlFileReturnsEmptyGraph)
@@ -169,7 +177,7 @@ TYPED_TEST(DeserializerTest, deserializingInvalidGraphMlFileReturnsEmptyGraph)
 
     auto graph = this->sut.deserializeGraphMlFile(mockStream);
 
-    EXPECT_EQ(graph.nodesAmount(), 0);
+    EXPECT_EQ(graph, decltype(graph){});
 }
 
 TYPED_TEST(DeserializerTest, deserializingMalformedMatFileReturnsEmptyGraph)
@@ -179,7 +187,7 @@ TYPED_TEST(DeserializerTest, deserializingMalformedMatFileReturnsEmptyGraph)
 
     auto graph = this->sut.deserializeMatFile(mockStream);
 
-    EXPECT_EQ(graph.nodesAmount(), 0);
+    EXPECT_EQ(graph, decltype(graph){});
 }
 
 TYPED_TEST(DeserializerTest, deserializingLstFileWithNoValuesReturnsEmptyGraph)
@@ -189,7 +197,7 @@ TYPED_TEST(DeserializerTest, deserializingLstFileWithNoValuesReturnsEmptyGraph)
 
     auto graph = this->sut.deserializeLstFile(mockStream);
 
-    EXPECT_EQ(graph.nodesAmount(), 0);
+    EXPECT_EQ(graph, decltype(graph){});
 }
 
 TYPED_TEST(DeserializerTest, deserializingMatFileWithNoValuesReturnsEmptyGraph)
@@ -199,7 +207,7 @@ TYPED_TEST(DeserializerTest, deserializingMatFileWithNoValuesReturnsEmptyGraph)
 
     auto graph = this->sut.deserializeMatFile(mockStream);
 
-    EXPECT_EQ(graph.nodesAmount(), 0);
+    EXPECT_EQ(graph, decltype(graph){});
 }
 
 TYPED_TEST(DeserializerTest, deserializingGraphMlFileWithNoValuesReturnsEmptyGraph)
@@ -209,6 +217,6 @@ TYPED_TEST(DeserializerTest, deserializingGraphMlFileWithNoValuesReturnsEmptyGra
 
     auto graph = this->sut.deserializeGraphMlFile(mockStream);
 
-    EXPECT_EQ(graph.nodesAmount(), 0);
+    EXPECT_EQ(graph, decltype(graph){});
 }
 } // namespace Graphs

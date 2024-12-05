@@ -1,18 +1,12 @@
-#include <filesystem>
 #include <Graphs/Deserializer.hpp>
 #include <Graphs/Graph.hpp>
+#include <Graphs/SerializationFormats.hpp>
 #include <iostream>
 #include <regex>
 #include <vector>
 
 namespace
 {
-enum class FileType
-{
-    LST,
-    MAT,
-    GRAPHML
-};
 
 std::vector<uint32_t> parseLstLine(const std::string& line)
 {
@@ -48,7 +42,7 @@ std::vector<Graphs::WeightType> parseMatLine(const std::string& line)
     return weights;
 }
 
-template <typename GraphType, FileType Ft>
+template <typename GraphType, Graphs::FileType Ft>
 class ContentIntoGraphRepresentationParser
 {
 public:
@@ -59,7 +53,7 @@ public:
 };
 
 template <typename GraphType>
-class ContentIntoGraphRepresentationParser<GraphType, FileType::MAT>
+class ContentIntoGraphRepresentationParser<GraphType, Graphs::FileType::MAT>
 {
 public:
     static GraphType parse(const std::string& content)
@@ -106,7 +100,7 @@ public:
 };
 
 template <typename GraphType>
-class ContentIntoGraphRepresentationParser<GraphType, FileType::LST>
+class ContentIntoGraphRepresentationParser<GraphType, Graphs::FileType::LST>
 {
 public:
     static GraphType parse(const std::string& content)
@@ -140,7 +134,7 @@ public:
 };
 
 template <typename GraphType>
-class ContentIntoGraphRepresentationParser<GraphType, FileType::GRAPHML>
+class ContentIntoGraphRepresentationParser<GraphType, Graphs::FileType::GRAPHML>
 {
 public:
     static GraphType parse(const std::string& content)
@@ -197,9 +191,9 @@ public:
     }
 };
 
-std::string readFileContent(std::istream& file)
+std::string readStreamContent(std::istream& stream)
 {
-    return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+    return std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
 }
 }; // namespace
 
@@ -210,10 +204,10 @@ GraphType Deserializer<GraphType, Guard>::deserializeLstFile(std::istream& file)
 {
     if (not file.good())
     {
-        std::cerr << "[Deserializer] Error when accessing file";
+        std::cerr << "[Deserializer] Error accessing file";
         return GraphType{};
     }
-    return ContentIntoGraphRepresentationParser<GraphType, FileType::LST>::parse(readFileContent(file));
+    return ContentIntoGraphRepresentationParser<GraphType, FileType::LST>::parse(readStreamContent(file));
 }
 
 template <typename GraphType, typename Guard>
@@ -221,10 +215,10 @@ GraphType Deserializer<GraphType, Guard>::deserializeMatFile(std::istream& file)
 {
     if (not file.good())
     {
-        std::cerr << "[Deserializer] Error when accessing file";
+        std::cerr << "[Deserializer] Error accessing file";
         return GraphType{};
     }
-    return ContentIntoGraphRepresentationParser<GraphType, FileType::MAT>::parse(readFileContent(file));
+    return ContentIntoGraphRepresentationParser<GraphType, FileType::MAT>::parse(readStreamContent(file));
 }
 
 template <typename GraphType, typename Guard>
@@ -232,9 +226,9 @@ GraphType Deserializer<GraphType, Guard>::deserializeGraphMlFile(std::istream& f
 {
     if (not file.good())
     {
-        std::cerr << "[Deserializer] Error when accessing file";
+        std::cerr << "[Deserializer] Error accessing file";
         return GraphType{};
     }
-    return ContentIntoGraphRepresentationParser<GraphType, FileType::GRAPHML>::parse(readFileContent(file));
+    return ContentIntoGraphRepresentationParser<GraphType, FileType::GRAPHML>::parse(readStreamContent(file));
 }
 } // namespace Graphs

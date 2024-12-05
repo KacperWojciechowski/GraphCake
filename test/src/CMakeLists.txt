@@ -1,5 +1,4 @@
-set(UT_SOURCES AdjMatrixTest.cpp
-               AdjListTest.cpp
+set(UT_SOURCES GraphRepresentationsTests.cpp
                ColoringAlgorithmsTest.cpp
                DeserializerTest.cpp)
 

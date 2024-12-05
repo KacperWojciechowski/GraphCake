@@ -13,9 +13,9 @@ template <typename GraphType, typename Guard = std::enable_if_t<std::is_base_of_
 class Deserializer
 {
 public:
-    static GraphType deserializeLstFile(std::istream& filePath);
-    static GraphType deserializeMatFile(std::istream& filePath);
-    static GraphType deserializeGraphMlFile(std::istream& filePath);
+    static GraphType deserializeLstFile(std::istream&);
+    static GraphType deserializeMatFile(std::istream&);
+    static GraphType deserializeGraphMlFile(std::istream&);
 };
 
 template class Deserializer<AdjList>;

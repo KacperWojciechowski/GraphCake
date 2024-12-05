@@ -2,7 +2,8 @@ set(SOURCES AdjList.cpp
             AdjMatrix.cpp
             Benchmark.cpp
             ColoringAlgorithms.cpp
-            Deserializer.cpp)
+            Deserializer.cpp
+            Serializer.cpp)
 
 add_library(GraphCake STATIC ${SOURCES})
 target_include_directories(GraphCake PUBLIC ${PROJECT_SOURCE_DIR}/inc)
