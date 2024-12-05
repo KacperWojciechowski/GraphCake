@@ -23,8 +23,9 @@ public:
     void removeNode(NodeId) override;
     void removeEdge(const EdgeInfo&) override;
 
-    virtual std::vector<NodeId> getNodeIds() const override;
-    virtual std::vector<NodeId> getNeighborsOf(NodeId) const override;
+    std::vector<NodeId> getNodeIds() const override;
+    std::vector<NodeId> getOutgoingNeighborsOf(NodeId) const override;
+    std::vector<NodeId> getIncommingNeighborsOf(NodeId) const override;
 
     virtual ~AdjList() = default;
 

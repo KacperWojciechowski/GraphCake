@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <Graphs/AdjMatrix.hpp>
+#include <ranges>
 #include <sstream>
 
 namespace Graphs
@@ -219,7 +220,7 @@ std::vector<NodeId> AdjMatrix::getNodeIds() const
     return nodeIds;
 }
 
-std::vector<NodeId> AdjMatrix::getNeighborsOf(NodeId node) const
+std::vector<NodeId> AdjMatrix::getOutgoingNeighborsOf(NodeId node) const
 {
     auto nodeIndex = nodeIndexMapping.find(node);
     if (nodeIndex == nodeIndexMapping.end())
@@ -245,9 +246,32 @@ std::vector<NodeId> AdjMatrix::getNeighborsOf(NodeId node) const
             neighbors.push_back(nodeId);
         }
     }
+    std::ranges::sort(neighbors);
+    return neighbors;
+}
+
+std::vector<NodeId> AdjMatrix::getIncommingNeighborsOf(NodeId node) const
+{
+    auto nodeIndex = nodeIndexMapping.find(node);
+    if (nodeIndex == nodeIndexMapping.end())
+    {
+        return {};
+    }
+
+    auto mappingFinder = [this](auto target) {
+        return std::ranges::find_if(nodeIndexMapping, [target](const auto& elem) {
+            auto& [_, index] = elem;
+            return index == target;
+        });
+    };
+
+    const auto& [_, index] = *nodeIndex;
+
+    std::vector<NodeId> neighbors = {};
     for (uint32_t i = 0; i < matrix.size(); i++)
     {
-        if (matrix[i][index] != 0 and neighbors.end() == std::ranges::find(neighbors, i))
+        auto [mapping, _] = *mappingFinder(i);
+        if (matrix[i][index] != 0)
         {
             const auto& [nodeId, _] = *mappingFinder(i);
             neighbors.push_back(nodeId);
