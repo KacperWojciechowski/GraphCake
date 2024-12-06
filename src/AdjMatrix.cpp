@@ -5,8 +5,8 @@
 
 namespace Graphs
 {
-
-void AdjMatrix::resizeMatrixToFitNodes(uint32_t nodesCount)
+template <GraphDirectionality directionality>
+void AdjMatrix<directionality>::resizeMatrixToFitNodes(uint32_t nodesCount)
 {
     if (nodesCount > matrix.size())
     {
@@ -27,7 +27,14 @@ void AdjMatrix::resizeMatrixToFitNodes(uint32_t nodesCount)
     }
 }
 
-AdjMatrix::AdjMatrix(const Graph& other)
+template <GraphDirectionality directionality>
+GraphDirectionality AdjMatrix<directionality>::getDirectionality() const
+{
+    return directionality;
+}
+
+template <GraphDirectionality directionality>
+AdjMatrix<directionality>::AdjMatrix(const Graph& other)
 {
     resizeMatrixToFitNodes(other.nodesAmount());
 
@@ -40,7 +47,8 @@ AdjMatrix::AdjMatrix(const Graph& other)
     }
 }
 
-uint32_t AdjMatrix::nodeDegree(NodeId node) const
+template <GraphDirectionality directionality>
+uint32_t AdjMatrix<directionality>::nodeDegree(NodeId node) const
 {
     if (node > matrix.size())
     {
@@ -115,7 +123,8 @@ uint32_t AdjMatrix::nodeDegree(NodeId node) const
     return index;
 }*/
 
-void AdjMatrix::setEdge(const EdgeInfo& edge)
+template <GraphDirectionality directionality>
+void AdjMatrix<directionality>::setEdge(const EdgeInfo& edge)
 {
     auto sourceNodeMapping = nodeIndexMapping.find(edge.source);
     auto destinationNodeMapping = nodeIndexMapping.find(edge.destination);
@@ -129,12 +138,14 @@ void AdjMatrix::setEdge(const EdgeInfo& edge)
     this->matrix[sourceNodeIndex][destinationNodeIndex] = edge.weight.value_or(1);
 }
 
-void AdjMatrix::addNodes(uint32_t nodesCount)
+template <GraphDirectionality directionality>
+void AdjMatrix<directionality>::addNodes(uint32_t nodesCount)
 {
     resizeMatrixToFitNodes(matrix.size() + nodesCount);
 }
 
-void AdjMatrix::removeEdge(const EdgeInfo& edge)
+template <GraphDirectionality directionality>
+void AdjMatrix<directionality>::removeEdge(const EdgeInfo& edge)
 {
     auto sourceNodeMapping = nodeIndexMapping.find(edge.source);
     auto destinationNodeMapping = nodeIndexMapping.find(edge.destination);
@@ -147,7 +158,8 @@ void AdjMatrix::removeEdge(const EdgeInfo& edge)
     matrix[sourceNodeIndex][destinationNodeIndex] = 0;
 }
 
-void AdjMatrix::removeNode(NodeId node)
+template <GraphDirectionality directionality>
+void AdjMatrix<directionality>::removeNode(NodeId node)
 {
     auto nodeItr = nodeIndexMapping.find(node);
     if (nodeItr == nodeIndexMapping.end())
@@ -173,7 +185,8 @@ void AdjMatrix::removeNode(NodeId node)
     nodeIndexMapping.erase(nodeItr);
 }
 
-std::string AdjMatrix::show() const
+template <GraphDirectionality directionality>
+std::string AdjMatrix<directionality>::show() const
 {
     std::stringstream out;
     out << std::format("\nNodes amount = {}\n[\n", matrix.size());
@@ -189,12 +202,14 @@ std::string AdjMatrix::show() const
     return out.str();
 }
 
-uint32_t AdjMatrix::nodesAmount() const
+template <GraphDirectionality directionality>
+uint32_t AdjMatrix<directionality>::nodesAmount() const
 {
     return matrix.size();
 }
 
-EdgeInfo AdjMatrix::findEdge(const EdgeInfo& edge) const
+template <GraphDirectionality directionality>
+EdgeInfo AdjMatrix<directionality>::findEdge(const EdgeInfo& edge) const
 {
     auto sourceIterator = nodeIndexMapping.find(edge.source);
     auto destinationIterator = nodeIndexMapping.find(edge.destination);
@@ -210,7 +225,8 @@ EdgeInfo AdjMatrix::findEdge(const EdgeInfo& edge) const
     return {edge.source, edge.destination, weight != 0 ? std::make_optional(weight) : std::nullopt};
 }
 
-std::vector<NodeId> AdjMatrix::getNodeIds() const
+template <GraphDirectionality directionality>
+std::vector<NodeId> AdjMatrix<directionality>::getNodeIds() const
 {
     std::vector<NodeId> nodeIds = {};
     for (const auto& [node, _] : nodeIndexMapping)
@@ -220,7 +236,8 @@ std::vector<NodeId> AdjMatrix::getNodeIds() const
     return nodeIds;
 }
 
-std::vector<NodeId> AdjMatrix::getOutgoingNeighborsOf(NodeId node) const
+template <GraphDirectionality directionality>
+std::vector<NodeId> AdjMatrix<directionality>::getOutgoingNeighborsOf(NodeId node) const
 {
     auto nodeIndex = nodeIndexMapping.find(node);
     if (nodeIndex == nodeIndexMapping.end())
@@ -250,7 +267,8 @@ std::vector<NodeId> AdjMatrix::getOutgoingNeighborsOf(NodeId node) const
     return neighbors;
 }
 
-std::vector<NodeId> AdjMatrix::getIncommingNeighborsOf(NodeId node) const
+template <GraphDirectionality directionality>
+std::vector<NodeId> AdjMatrix<directionality>::getIncommingNeighborsOf(NodeId node) const
 {
     auto nodeIndex = nodeIndexMapping.find(node);
     if (nodeIndex == nodeIndexMapping.end())

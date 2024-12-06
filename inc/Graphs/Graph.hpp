@@ -22,6 +22,12 @@ struct EdgeInfo
     auto operator<=>(const EdgeInfo&) const = default;
 };
 
+enum class GraphDirectionality
+{
+    directed,
+    undirected
+};
+
 class GraphReader
 {
 public:
@@ -36,6 +42,8 @@ public:
     virtual std::vector<NodeId> getNodeIds() const = 0;
     virtual std::vector<NodeId> getOutgoingNeighborsOf(NodeId) const = 0;
     virtual std::vector<NodeId> getIncommingNeighborsOf(NodeId) const = 0;
+
+    virtual GraphDirectionality getDirectionality() const = 0;
 
     virtual std::vector<NodeId> getNeighborsOf(NodeId node) const
     {
@@ -112,6 +120,7 @@ class Graph : public GraphReader,
               public GraphWriter
 {
 public:
+    Graph() = default;
     virtual ~Graph() = default;
 };
 } // namespace Graphs

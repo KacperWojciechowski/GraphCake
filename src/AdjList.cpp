@@ -33,7 +33,8 @@ namespace
 
 namespace Graphs
 {
-AdjList::AdjList(const Graph& graph)
+template <GraphDirectionality directionality>
+AdjList<directionality>::AdjList(const Graph& graph)
 {
     nodes.reserve(graph.nodesAmount());
 
@@ -87,7 +88,8 @@ AdjList::AdjList(const Graph& graph)
     }
 }*/
 
-std::string AdjList::show() const
+template <GraphDirectionality directionality>
+std::string AdjList<directionality>::show() const
 {
     std::stringstream outStream;
     outStream << std::format("Nodes amount = {}\n{{\n", nodeMap.size());
@@ -108,17 +110,26 @@ std::string AdjList::show() const
     return outStream.str();
 }
 
-uint32_t AdjList::nodesAmount() const
+template <GraphDirectionality directionality>
+GraphDirectionality AdjList<directionality>::getDirectionality() const
+{
+    return directionality;
+}
+
+template <GraphDirectionality directionality>
+uint32_t AdjList<directionality>::nodesAmount() const
 {
     return static_cast<uint32_t>(nodes.size());
 }
 
-uint32_t AdjList::nodeDegree(NodeId node) const
+template <GraphDirectionality directionality>
+uint32_t AdjList<directionality>::nodeDegree(NodeId node) const
 {
     return nodes[nodeMap.find(node)->second].size();
 }
 
-std::vector<NodeId> AdjList::getOutgoingNeighborsOf(NodeId node) const
+template <GraphDirectionality directionality>
+std::vector<NodeId> AdjList<directionality>::getOutgoingNeighborsOf(NodeId node) const
 {
     auto nodeMapping = nodeMap.find(node);
     if (nodeMapping == nodeMap.end())
@@ -134,7 +145,8 @@ std::vector<NodeId> AdjList::getOutgoingNeighborsOf(NodeId node) const
     return neighbors;
 }
 
-std::vector<NodeId> AdjList::getIncommingNeighborsOf(NodeId node) const
+template <GraphDirectionality directionality>
+std::vector<NodeId> AdjList<directionality>::getIncommingNeighborsOf(NodeId node) const
 {
     auto nodeMapping = nodeMap.find(node);
     if (nodeMapping == nodeMap.end())
@@ -342,7 +354,8 @@ std::vector<NodeId> AdjList::getIncommingNeighborsOf(NodeId node) const
 // algorytmu greedy i zwr�cenie ilo�ci u�ytych kolor�w
 // }
 
-void AdjList::addNeighborAndSortRange(Neighbors& range, EdgeInfo tgtNeighbor)
+template <GraphDirectionality directionality>
+void AdjList<directionality>::addNeighborAndSortRange(Neighbors& range, EdgeInfo tgtNeighbor)
 {
     if (not tgtNeighbor.weight.has_value())
     {
@@ -367,7 +380,8 @@ void AdjList::addNeighborAndSortRange(Neighbors& range, EdgeInfo tgtNeighbor)
     }
 }
 
-void AdjList::setEdge(const EdgeInfo& edge)
+template <GraphDirectionality directionality>
+void AdjList<directionality>::setEdge(const EdgeInfo& edge)
 {
     auto sourceNodeMapping = nodeMap.find(edge.source);
     auto destinationNodeMapping = nodeMap.find(edge.destination);
@@ -382,7 +396,8 @@ void AdjList::setEdge(const EdgeInfo& edge)
     addNeighborAndSortRange(nodes[sourceNodeIndex], {edge.source, edge.destination, edge.weight.value_or(1)});
 }
 
-void AdjList::removeEdge(const EdgeInfo& edge)
+template <GraphDirectionality directionality>
+void AdjList<directionality>::removeEdge(const EdgeInfo& edge)
 {
     auto sourceNodeMapping = nodeMap.find(edge.source);
     auto destinationNodeMapping = nodeMap.find(edge.destination);
@@ -405,7 +420,8 @@ void AdjList::removeEdge(const EdgeInfo& edge)
     nodes[destinationNodeIndex].erase(firstDst, lastDst);
 }
 
-void AdjList::addNodes(uint32_t nodesAmount)
+template <GraphDirectionality directionality>
+void AdjList<directionality>::addNodes(uint32_t nodesAmount)
 {
     auto highestId = nodeMap.empty() ? 0 : nodeMap.rbegin()->first;
 
@@ -416,7 +432,8 @@ void AdjList::addNodes(uint32_t nodesAmount)
     nodes.resize(nodeMap.size());
 }
 
-void AdjList::removeNode(NodeId node)
+template <GraphDirectionality directionality>
+void AdjList<directionality>::removeNode(NodeId node)
 {
     auto nodeMapping = nodeMap.find(node);
     if (nodeMapping == nodeMap.end())
@@ -445,7 +462,8 @@ void AdjList::removeNode(NodeId node)
     nodeMap.erase(nodeMapping);
 }
 
-EdgeInfo AdjList::findEdge(const EdgeInfo& edge) const
+template <GraphDirectionality directionality>
+EdgeInfo AdjList<directionality>::findEdge(const EdgeInfo& edge) const
 {
     auto source = nodeMap.find(edge.source);
     auto destination = nodeMap.find(edge.destination);
@@ -466,7 +484,8 @@ EdgeInfo AdjList::findEdge(const EdgeInfo& edge) const
     return {edge.source, edge.destination, neighbor->weight};
 }
 
-std::vector<NodeId> AdjList::getNodeIds() const
+template <GraphDirectionality directionality>
+std::vector<NodeId> AdjList<directionality>::getNodeIds() const
 {
     std::vector<NodeId> nodeIds;
     for (const auto& [nodeId, _] : nodeMap)

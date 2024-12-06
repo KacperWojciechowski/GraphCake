@@ -18,6 +18,8 @@ public:
     static GraphType deserializeGraphMlFile(std::istream&);
 };
 
-template class Deserializer<AdjList>;
-template class Deserializer<AdjMatrix>;
+template class Deserializer<AdjList<GraphDirectionality::undirected>>;
+template class Deserializer<AdjList<GraphDirectionality::directed>>;
+template class Deserializer<AdjMatrix<GraphDirectionality::undirected>>;
+template class Deserializer<AdjMatrix<GraphDirectionality::directed>>;
 } // namespace Graphs

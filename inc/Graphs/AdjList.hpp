@@ -6,6 +6,7 @@
 
 namespace Graphs
 {
+template <GraphDirectionality directionality>
 class AdjList : public Graph
 {
 public:
@@ -27,6 +28,8 @@ public:
     std::vector<NodeId> getOutgoingNeighborsOf(NodeId) const override;
     std::vector<NodeId> getIncommingNeighborsOf(NodeId) const override;
 
+    GraphDirectionality getDirectionality() const override;
+
     virtual ~AdjList() = default;
 
 private:
@@ -40,4 +43,6 @@ private:
     std::vector<Neighbors> nodes;
     std::map<NodeId, uint32_t> nodeMap;
 };
+template class AdjList<GraphDirectionality::undirected>;
+template class AdjList<GraphDirectionality::directed>;
 } // namespace Graphs

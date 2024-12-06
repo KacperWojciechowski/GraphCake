@@ -8,6 +8,7 @@
 
 namespace Graphs
 {
+template <GraphDirectionality directionality>
 class AdjMatrix : public Graph
 {
 public:
@@ -29,6 +30,8 @@ public:
     std::vector<NodeId> getOutgoingNeighborsOf(NodeId) const override;
     std::vector<NodeId> getIncommingNeighborsOf(NodeId) const override;
 
+    GraphDirectionality getDirectionality() const override;
+
     virtual ~AdjMatrix() = default;
 
 private:
@@ -40,4 +43,7 @@ private:
     std::map<NodeId, uint32_t> nodeIndexMapping = {};
     std::vector<Row> matrix = {};
 };
+
+template class AdjMatrix<GraphDirectionality::undirected>;
+template class AdjMatrix<GraphDirectionality::directed>;
 } // namespace Graphs

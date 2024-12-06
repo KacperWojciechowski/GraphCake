@@ -1,6 +1,5 @@
 #include <gmock/gmock.h>
-#include <Graphs/AdjList.hpp>
-#include <Graphs/AdjMatrix.hpp>
+#include <GraphRepresentationHelpers.hpp>
 #include <Graphs/Graph.hpp>
 #include <gtest/gtest.h>
 #include <string>
@@ -26,8 +25,6 @@ class GraphRepresentationsTests : public testing::Test
 protected:
     GraphType sut;
 };
-
-using GraphTypes = ::testing::Types<AdjList, AdjMatrix>;
 
 TYPED_TEST_SUITE(GraphRepresentationsTests, GraphTypes);
 
@@ -65,8 +62,10 @@ TYPED_TEST(GraphRepresentationsTests, removingNodeWhichHasBeenAlreadyRemovedDoes
 TYPED_TEST(GraphRepresentationsTests, removingNodeRemovesAllEdgesConnectedToIt)
 {
     this->sut.addNodes(fourNodes);
-    this->sut.setEdge({firstNodeId, thirdNodeId});
-    this->sut.setEdge({thirdNodeId, firstNodeId});
+    this->sut.setEdges({
+        {firstNodeId, thirdNodeId},
+        {thirdNodeId, firstNodeId}
+    });
     this->sut.removeNode(thirdNodeId);
     EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 0);
 }
@@ -76,16 +75,6 @@ TYPED_TEST(GraphRepresentationsTests, addingEdgeIncreasesNodeDegree)
     this->sut.addNodes(fourNodes);
     EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 0);
     this->sut.setEdge({firstNodeId, thirdNodeId});
-    EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 1);
-}
-
-TYPED_TEST(GraphRepresentationsTests, removingEdgeDecreasesNodeDegree)
-{
-    this->sut.addNodes(fourNodes);
-    this->sut.setEdge({firstNodeId, thirdNodeId});
-    this->sut.setEdge({firstNodeId, secondNodeId});
-    EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 2);
-    this->sut.removeEdge({firstNodeId, thirdNodeId});
     EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 1);
 }
 
@@ -246,4 +235,18 @@ TYPED_TEST(GraphRepresentationsTests, spaceshipOperatorCorrectlyComparesGraphsBa
     EXPECT_THAT(smallerGraph > largerGraph, false);
 }
 
+// TODO: Add directionality tests
+/*
+
+Symmetric removal for undirected, asymetric for directed
+TYPED_TEST(GraphRepresentationsTests, removingEdgeDecreasesNodeDegree)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdges({{firstNodeId, thirdNodeId}, {firstNodeId, secondNodeId}});
+    EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 2);
+    this->sut.removeEdge({firstNodeId, thirdNodeId});
+    EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 1);
+}*/
+
+// Symmetric Edge addition for undirected, asymmetric for directed
 } // namespace Graphs

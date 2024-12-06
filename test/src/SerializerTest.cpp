@@ -1,5 +1,4 @@
-#include <Graphs/AdjList.hpp>
-#include <Graphs/AdjMatrix.hpp>
+#include <GraphRepresentationHelpers.hpp>
 #include <Graphs/Serializer.hpp>
 #include <gtest/gtest.h>
 #include <SerializationHelpers.hpp>
@@ -15,8 +14,6 @@ struct SerializerTest : testing::Test
 
     using sut = Serializer;
 };
-
-using GraphTypes = ::testing::Types<AdjList, AdjMatrix>;
 
 TYPED_TEST_SUITE(SerializerTest, GraphTypes);
 

@@ -1,4 +1,5 @@
 #include <gmock/gmock.h>
+#include <GraphRepresentationHelpers.hpp>
 #include <Graphs/Deserializer.hpp>
 #include <gtest/gtest.h>
 #include <SerializationHelpers.hpp>
@@ -21,8 +22,6 @@ struct DeserializerTest : public testing::Test
 
     using sut = Deserializer<GraphType>;
 };
-
-using GraphTypes = ::testing::Types<AdjList, AdjMatrix>;
 
 TYPED_TEST_SUITE(DeserializerTest, GraphTypes);
 
