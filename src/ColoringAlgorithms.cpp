@@ -97,7 +97,7 @@ ColoringResult resizeAndInitializeResultStructure(const Permutation& nodes)
 {
     auto [colorId, coloringVector] = ColoringResult{};
     coloringVector = createColoringTable(nodes);
-    colorId = std::numeric_limits<ColorId>::max();
+    colorId = std::numeric_limits<ColorId>::min();
     return std::tie(colorId, coloringVector);
 }
 } // namespace

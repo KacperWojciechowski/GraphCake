@@ -48,7 +48,7 @@ class ContentIntoGraphRepresentationParser
 public:
     static GraphType parse(const std::string&)
     {
-        return GraphType{};
+        return GraphType{Graphs::GraphDirectionality::directed};
     }
 };
 

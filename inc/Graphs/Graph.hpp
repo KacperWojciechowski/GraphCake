@@ -22,6 +22,12 @@ struct EdgeInfo
     auto operator<=>(const EdgeInfo&) const = default;
 };
 
+enum class GraphDirectionality
+{
+    directed,
+    undirected
+};
+
 class GraphReader
 {
 public:
@@ -32,10 +38,26 @@ public:
     }
     virtual EdgeInfo findEdge(const EdgeInfo&) const = 0;
     virtual uint32_t nodesAmount() const = 0;
-    virtual uint32_t nodeDegree(NodeId) const = 0;
+    virtual uint32_t getIncommingDegree(NodeId) const = 0;
+    virtual uint32_t getOutgoingDegree(NodeId) const = 0;
+
     virtual std::vector<NodeId> getNodeIds() const = 0;
     virtual std::vector<NodeId> getOutgoingNeighborsOf(NodeId) const = 0;
     virtual std::vector<NodeId> getIncommingNeighborsOf(NodeId) const = 0;
+    virtual std::vector<EdgeInfo> getEdges() const = 0;
+
+    virtual GraphDirectionality getDirectionality() const = 0;
+
+    virtual uint32_t graphDegree() const
+    {
+        uint32_t graphDegree = 0;
+        for (auto node : getNodeIds())
+        {
+            auto maxNodeDegree = std::max(getIncommingDegree(node), getOutgoingDegree(node));
+            graphDegree = std::max(graphDegree, maxNodeDegree);
+        }
+        return graphDegree;
+    }
 
     virtual std::vector<NodeId> getNeighborsOf(NodeId node) const
     {
@@ -106,12 +128,14 @@ public:
     virtual void addNodes(uint32_t) = 0;
     virtual void removeNode(NodeId) = 0;
     virtual void removeEdge(const EdgeInfo&) = 0;
+    virtual void reset() = 0;
 };
 
 class Graph : public GraphReader,
               public GraphWriter
 {
 public:
+    Graph() = default;
     virtual ~Graph() = default;
 };
 } // namespace Graphs

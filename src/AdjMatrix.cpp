@@ -5,8 +5,8 @@
 
 namespace Graphs
 {
-
-void AdjMatrix::resizeMatrixToFitNodes(uint32_t nodesCount)
+template <GraphDirectionality directionality>
+void AdjMatrix<directionality>::resizeMatrixToFitNodes(uint32_t nodesCount)
 {
     if (nodesCount > matrix.size())
     {
@@ -27,7 +27,14 @@ void AdjMatrix::resizeMatrixToFitNodes(uint32_t nodesCount)
     }
 }
 
-AdjMatrix::AdjMatrix(const Graph& other)
+template <GraphDirectionality directionality>
+GraphDirectionality AdjMatrix<directionality>::getDirectionality() const
+{
+    return directionality;
+}
+
+template <GraphDirectionality directionality>
+AdjMatrix<directionality>::AdjMatrix(const Graph& other)
 {
     resizeMatrixToFitNodes(other.nodesAmount());
 
@@ -40,30 +47,82 @@ AdjMatrix::AdjMatrix(const Graph& other)
     }
 }
 
-uint32_t AdjMatrix::nodeDegree(NodeId node) const
+template <GraphDirectionality directionality>
+uint32_t AdjMatrix<directionality>::getOutgoingDegree(NodeId nodeId) const
 {
-    if (node > matrix.size())
+    auto nodeMapping = nodeIndexMapping.find(nodeId);
+    if (nodeMapping == nodeIndexMapping.end())
     {
         return 0;
     }
 
-    auto nodeIndex = nodeIndexMapping.find(node);
-    if (nodeIndex == nodeIndexMapping.end())
-    {
-        return 0;
-    }
-
-    auto& [_, index] = *nodeIndex;
-
+    auto [_, nodeIdx] = *nodeMapping;
     uint32_t degree = 0;
-    for (auto& elem : matrix[index])
+
+    for (auto edge : matrix[nodeIdx])
     {
-        if (elem != 0)
+        if (edge != 0)
         {
-            degree++;
+            ++degree;
         }
     }
     return degree;
+}
+
+template <GraphDirectionality directionality>
+uint32_t AdjMatrix<directionality>::getIncommingDegree(NodeId nodeId) const
+{
+    auto nodeMapping = nodeIndexMapping.find(nodeId);
+    if (nodeMapping == nodeIndexMapping.end())
+    {
+        return 0;
+    }
+
+    auto [_, nodeIdx] = *nodeMapping;
+    uint32_t degree = 0;
+
+    for (auto row : matrix)
+    {
+        if (row[nodeIdx] != 0)
+        {
+            ++degree;
+        }
+    }
+
+    return degree;
+}
+
+template <GraphDirectionality directionality>
+void AdjMatrix<directionality>::reset()
+{
+    matrix.clear();
+    nodeIndexMapping.clear();
+}
+
+template <GraphDirectionality directionality>
+std::vector<EdgeInfo> AdjMatrix<directionality>::getEdges() const
+{
+    auto findMapping = [this](auto matrixIdx) {
+        auto [nodeId, _] = *(std::ranges::find_if(nodeIndexMapping, [matrixIdx](auto elem) {
+            auto& [_, index] = elem;
+            return index == matrixIdx;
+        }));
+        return nodeId;
+    };
+
+    std::vector<EdgeInfo> edges = {};
+    for (uint32_t rowIdx = 0; auto row : matrix)
+    {
+        for (uint32_t edgeIdx = 0; auto edgeWeight : row)
+        {
+            if (edgeWeight != 0)
+            {
+                edges.push_back(
+                    {.source = findMapping(rowIdx), .destination = findMapping(edgeIdx), .weight = edgeWeight});
+            }
+        }
+    }
+    return edges;
 }
 
 /*	Function calculates the Estrada index for the graph
@@ -115,7 +174,8 @@ uint32_t AdjMatrix::nodeDegree(NodeId node) const
     return index;
 }*/
 
-void AdjMatrix::setEdge(const EdgeInfo& edge)
+template <GraphDirectionality directionality>
+void AdjMatrix<directionality>::setEdge(const EdgeInfo& edge)
 {
     auto sourceNodeMapping = nodeIndexMapping.find(edge.source);
     auto destinationNodeMapping = nodeIndexMapping.find(edge.destination);
@@ -127,14 +187,21 @@ void AdjMatrix::setEdge(const EdgeInfo& edge)
     auto& [_, destinationNodeIndex] = *destinationNodeMapping;
 
     this->matrix[sourceNodeIndex][destinationNodeIndex] = edge.weight.value_or(1);
+
+    if constexpr (directionality == GraphDirectionality::undirected)
+    {
+        this->matrix[destinationNodeIndex][sourceNodeIndex] = edge.weight.value_or(1);
+    }
 }
 
-void AdjMatrix::addNodes(uint32_t nodesCount)
+template <GraphDirectionality directionality>
+void AdjMatrix<directionality>::addNodes(uint32_t nodesCount)
 {
     resizeMatrixToFitNodes(matrix.size() + nodesCount);
 }
 
-void AdjMatrix::removeEdge(const EdgeInfo& edge)
+template <GraphDirectionality directionality>
+void AdjMatrix<directionality>::removeEdge(const EdgeInfo& edge)
 {
     auto sourceNodeMapping = nodeIndexMapping.find(edge.source);
     auto destinationNodeMapping = nodeIndexMapping.find(edge.destination);
@@ -145,9 +212,15 @@ void AdjMatrix::removeEdge(const EdgeInfo& edge)
     auto& [_, sourceNodeIndex] = *sourceNodeMapping;
     auto& [_, destinationNodeIndex] = *destinationNodeMapping;
     matrix[sourceNodeIndex][destinationNodeIndex] = 0;
+
+    if constexpr (directionality == GraphDirectionality::undirected)
+    {
+        matrix[destinationNodeIndex][sourceNodeIndex] = 0;
+    }
 }
 
-void AdjMatrix::removeNode(NodeId node)
+template <GraphDirectionality directionality>
+void AdjMatrix<directionality>::removeNode(NodeId node)
 {
     auto nodeItr = nodeIndexMapping.find(node);
     if (nodeItr == nodeIndexMapping.end())
@@ -173,7 +246,8 @@ void AdjMatrix::removeNode(NodeId node)
     nodeIndexMapping.erase(nodeItr);
 }
 
-std::string AdjMatrix::show() const
+template <GraphDirectionality directionality>
+std::string AdjMatrix<directionality>::show() const
 {
     std::stringstream out;
     out << std::format("\nNodes amount = {}\n[\n", matrix.size());
@@ -189,12 +263,14 @@ std::string AdjMatrix::show() const
     return out.str();
 }
 
-uint32_t AdjMatrix::nodesAmount() const
+template <GraphDirectionality directionality>
+uint32_t AdjMatrix<directionality>::nodesAmount() const
 {
     return matrix.size();
 }
 
-EdgeInfo AdjMatrix::findEdge(const EdgeInfo& edge) const
+template <GraphDirectionality directionality>
+EdgeInfo AdjMatrix<directionality>::findEdge(const EdgeInfo& edge) const
 {
     auto sourceIterator = nodeIndexMapping.find(edge.source);
     auto destinationIterator = nodeIndexMapping.find(edge.destination);
@@ -210,7 +286,8 @@ EdgeInfo AdjMatrix::findEdge(const EdgeInfo& edge) const
     return {edge.source, edge.destination, weight != 0 ? std::make_optional(weight) : std::nullopt};
 }
 
-std::vector<NodeId> AdjMatrix::getNodeIds() const
+template <GraphDirectionality directionality>
+std::vector<NodeId> AdjMatrix<directionality>::getNodeIds() const
 {
     std::vector<NodeId> nodeIds = {};
     for (const auto& [node, _] : nodeIndexMapping)
@@ -220,7 +297,8 @@ std::vector<NodeId> AdjMatrix::getNodeIds() const
     return nodeIds;
 }
 
-std::vector<NodeId> AdjMatrix::getOutgoingNeighborsOf(NodeId node) const
+template <GraphDirectionality directionality>
+std::vector<NodeId> AdjMatrix<directionality>::getOutgoingNeighborsOf(NodeId node) const
 {
     auto nodeIndex = nodeIndexMapping.find(node);
     if (nodeIndex == nodeIndexMapping.end())
@@ -250,7 +328,8 @@ std::vector<NodeId> AdjMatrix::getOutgoingNeighborsOf(NodeId node) const
     return neighbors;
 }
 
-std::vector<NodeId> AdjMatrix::getIncommingNeighborsOf(NodeId node) const
+template <GraphDirectionality directionality>
+std::vector<NodeId> AdjMatrix<directionality>::getIncommingNeighborsOf(NodeId node) const
 {
     auto nodeIndex = nodeIndexMapping.find(node);
     if (nodeIndex == nodeIndexMapping.end())
