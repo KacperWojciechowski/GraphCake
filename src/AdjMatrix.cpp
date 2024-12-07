@@ -48,30 +48,81 @@ AdjMatrix<directionality>::AdjMatrix(const Graph& other)
 }
 
 template <GraphDirectionality directionality>
-uint32_t AdjMatrix<directionality>::nodeDegree(NodeId node) const
+uint32_t AdjMatrix<directionality>::getOutgoingDegree(NodeId nodeId) const
 {
-    if (node > matrix.size())
+    auto nodeMapping = nodeIndexMapping.find(nodeId);
+    if (nodeMapping == nodeIndexMapping.end())
     {
         return 0;
     }
 
-    auto nodeIndex = nodeIndexMapping.find(node);
-    if (nodeIndex == nodeIndexMapping.end())
-    {
-        return 0;
-    }
-
-    auto& [_, index] = *nodeIndex;
-
+    auto [_, nodeIdx] = *nodeMapping;
     uint32_t degree = 0;
-    for (auto& elem : matrix[index])
+
+    for (auto edge : matrix[nodeIdx])
     {
-        if (elem != 0)
+        if (edge != 0)
         {
-            degree++;
+            ++degree;
         }
     }
     return degree;
+}
+
+template <GraphDirectionality directionality>
+uint32_t AdjMatrix<directionality>::getIncommingDegree(NodeId nodeId) const
+{
+    auto nodeMapping = nodeIndexMapping.find(nodeId);
+    if (nodeMapping == nodeIndexMapping.end())
+    {
+        return 0;
+    }
+
+    auto [_, nodeIdx] = *nodeMapping;
+    uint32_t degree = 0;
+
+    for (auto row : matrix)
+    {
+        if (row[nodeIdx] != 0)
+        {
+            ++degree;
+        }
+    }
+
+    return degree;
+}
+
+template <GraphDirectionality directionality>
+void AdjMatrix<directionality>::reset()
+{
+    matrix.clear();
+    nodeIndexMapping.clear();
+}
+
+template <GraphDirectionality directionality>
+std::vector<EdgeInfo> AdjMatrix<directionality>::getEdges() const
+{
+    auto findMapping = [this](auto matrixIdx) {
+        auto [nodeId, _] = *(std::ranges::find_if(nodeIndexMapping, [matrixIdx](auto elem) {
+            auto& [_, index] = elem;
+            return index == matrixIdx;
+        }));
+        return nodeId;
+    };
+
+    std::vector<EdgeInfo> edges = {};
+    for (uint32_t rowIdx = 0; auto row : matrix)
+    {
+        for (uint32_t edgeIdx = 0; auto edgeWeight : row)
+        {
+            if (edgeWeight != 0)
+            {
+                edges.push_back(
+                    {.source = findMapping(rowIdx), .destination = findMapping(edgeIdx), .weight = edgeWeight});
+            }
+        }
+    }
+    return edges;
 }
 
 /*	Function calculates the Estrada index for the graph
@@ -136,6 +187,11 @@ void AdjMatrix<directionality>::setEdge(const EdgeInfo& edge)
     auto& [_, destinationNodeIndex] = *destinationNodeMapping;
 
     this->matrix[sourceNodeIndex][destinationNodeIndex] = edge.weight.value_or(1);
+
+    if constexpr (directionality == GraphDirectionality::undirected)
+    {
+        this->matrix[destinationNodeIndex][sourceNodeIndex] = edge.weight.value_or(1);
+    }
 }
 
 template <GraphDirectionality directionality>
@@ -156,6 +212,11 @@ void AdjMatrix<directionality>::removeEdge(const EdgeInfo& edge)
     auto& [_, sourceNodeIndex] = *sourceNodeMapping;
     auto& [_, destinationNodeIndex] = *destinationNodeMapping;
     matrix[sourceNodeIndex][destinationNodeIndex] = 0;
+
+    if constexpr (directionality == GraphDirectionality::undirected)
+    {
+        matrix[destinationNodeIndex][sourceNodeIndex] = 0;
+    }
 }
 
 template <GraphDirectionality directionality>

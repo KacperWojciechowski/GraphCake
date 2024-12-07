@@ -38,15 +38,16 @@ std::tuple<std::string, GraphType> makeSampleGraphMlFile()
 template <typename GraphType>
 std::tuple<std::string, GraphType> makeSampleLstFile()
 {
-    auto streamContent = "1: 1 3\n"
+    auto streamContent = "1: 1 2 3\n"
                          "2: 1\n"
-                         "3: 2 3\n";
+                         "3: 1 3\n";
     GraphType graphRep = {};
     graphRep.addNodes(3);
     graphRep.setEdge({.source = 1, .destination = 1});
+    graphRep.setEdge({.source = 1, .destination = 2});
     graphRep.setEdge({.source = 1, .destination = 3});
     graphRep.setEdge({.source = 2, .destination = 1});
-    graphRep.setEdge({.source = 3, .destination = 2});
+    graphRep.setEdge({.source = 3, .destination = 1});
     graphRep.setEdge({.source = 3, .destination = 3});
 
     return std::tie(streamContent, graphRep);
@@ -55,18 +56,18 @@ std::tuple<std::string, GraphType> makeSampleLstFile()
 template <typename GraphType>
 std::tuple<std::string, GraphType> makeSampleMatFile()
 {
-    auto streamContent = "1 1 3\n"
+    auto streamContent = "1 2 3\n"
                          "2 1 0\n"
-                         "0 2 3\n";
+                         "3 0 3\n";
 
     GraphType graphRep = {};
     graphRep.addNodes(3);
     graphRep.setEdge({.source = 1, .destination = 1});
-    graphRep.setEdge({.source = 1, .destination = 2});
+    graphRep.setEdge({.source = 1, .destination = 2, .weight = 2});
     graphRep.setEdge({.source = 1, .destination = 3, .weight = 3});
     graphRep.setEdge({.source = 2, .destination = 1, .weight = 2});
     graphRep.setEdge({.source = 2, .destination = 2});
-    graphRep.setEdge({.source = 3, .destination = 2, .weight = 2});
+    graphRep.setEdge({.source = 3, .destination = 1, .weight = 3});
     graphRep.setEdge({.source = 3, .destination = 3, .weight = 3});
 
     return std::tie(streamContent, graphRep);

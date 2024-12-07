@@ -67,15 +67,8 @@ TYPED_TEST(GraphRepresentationsTests, removingNodeRemovesAllEdgesConnectedToIt)
         {thirdNodeId, firstNodeId}
     });
     this->sut.removeNode(thirdNodeId);
-    EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 0);
-}
-
-TYPED_TEST(GraphRepresentationsTests, addingEdgeIncreasesNodeDegree)
-{
-    this->sut.addNodes(fourNodes);
-    EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 0);
-    this->sut.setEdge({firstNodeId, thirdNodeId});
-    EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 1);
+    EXPECT_EQ(this->sut.getIncommingDegree(firstNodeId), 0);
+    EXPECT_EQ(this->sut.getOutgoingDegree(firstNodeId), 0);
 }
 
 TYPED_TEST(GraphRepresentationsTests, removingEdgeWhichHasBeenAlreadyRemovedDoesNotThrowAndDoesNotRemoveAnyEdges)
@@ -83,11 +76,10 @@ TYPED_TEST(GraphRepresentationsTests, removingEdgeWhichHasBeenAlreadyRemovedDoes
     this->sut.addNodes(fourNodes);
     this->sut.setEdge({firstNodeId, thirdNodeId});
     this->sut.setEdge({firstNodeId, secondNodeId});
-    EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 2);
     this->sut.removeEdge({firstNodeId, thirdNodeId});
-    EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 1);
+    EXPECT_EQ(this->sut.getOutgoingDegree(firstNodeId), 1);
     EXPECT_NO_THROW(this->sut.removeEdge({firstNodeId, thirdNodeId}));
-    EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 1);
+    EXPECT_EQ(this->sut.getOutgoingDegree(firstNodeId), 1);
 }
 
 TYPED_TEST(GraphRepresentationsTests, getNeighborsOfReturnsCorrectNeighbors)
@@ -96,22 +88,6 @@ TYPED_TEST(GraphRepresentationsTests, getNeighborsOfReturnsCorrectNeighbors)
     this->sut.setEdge({firstNodeId, thirdNodeId});
     this->sut.setEdge({secondNodeId, firstNodeId});
     EXPECT_THAT(this->sut.getNeighborsOf(firstNodeId), ElementsAre(secondNodeId, thirdNodeId));
-}
-
-TYPED_TEST(GraphRepresentationsTests, getOutgoingNeighborsOfReturnsOnlyTheOutgoingNeighbors)
-{
-    this->sut.addNodes(fourNodes);
-    this->sut.setEdge({firstNodeId, thirdNodeId});
-    this->sut.setEdge({secondNodeId, firstNodeId});
-    EXPECT_THAT(this->sut.getOutgoingNeighborsOf(firstNodeId), ElementsAre(thirdNodeId));
-}
-
-TYPED_TEST(GraphRepresentationsTests, getIncommingNeighborsOfReturnsOnlyTheIncommingNeighbors)
-{
-    this->sut.addNodes(fourNodes);
-    this->sut.setEdge({firstNodeId, thirdNodeId});
-    this->sut.setEdge({secondNodeId, firstNodeId});
-    EXPECT_THAT(this->sut.getIncommingNeighborsOf(firstNodeId), ElementsAre(secondNodeId));
 }
 
 TYPED_TEST(GraphRepresentationsTests, findEdgeReturnsCorrectEdgeInfo)
@@ -189,7 +165,7 @@ TYPED_TEST(GraphRepresentationsTests, settingEdgeBetweenNonexistantNodesDoesNotD
 {
     this->sut.addNodes(oneNode);
     EXPECT_NO_THROW(this->sut.setEdge({firstNodeId, thirdNodeId}));
-    EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 0);
+    EXPECT_EQ(this->sut.getOutgoingDegree(firstNodeId), 0);
 }
 
 TYPED_TEST(GraphRepresentationsTests, fetchingInformationForNonexistantEdgeDoesNotThrowAndReturnsEmptyWeight)
@@ -235,18 +211,159 @@ TYPED_TEST(GraphRepresentationsTests, spaceshipOperatorCorrectlyComparesGraphsBa
     EXPECT_THAT(smallerGraph > largerGraph, false);
 }
 
-// TODO: Add directionality tests
-/*
+template <typename GraphType>
+struct DirectedGraphRepresentationsTests : public GraphRepresentationsTests<GraphType>
+{};
 
-Symmetric removal for undirected, asymetric for directed
-TYPED_TEST(GraphRepresentationsTests, removingEdgeDecreasesNodeDegree)
+TYPED_TEST_SUITE(DirectedGraphRepresentationsTests, DirectedGraphTypes);
+
+TYPED_TEST(DirectedGraphRepresentationsTests, addingEdgeIncreasesOutgoingDegree)
 {
     this->sut.addNodes(fourNodes);
-    this->sut.setEdges({{firstNodeId, thirdNodeId}, {firstNodeId, secondNodeId}});
-    EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 2);
-    this->sut.removeEdge({firstNodeId, thirdNodeId});
-    EXPECT_EQ(this->sut.nodeDegree(firstNodeId), 1);
-}*/
+    EXPECT_EQ(this->sut.getOutgoingDegree(firstNodeId), 0);
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+    EXPECT_EQ(this->sut.getOutgoingDegree(firstNodeId), 1);
+}
 
-// Symmetric Edge addition for undirected, asymmetric for directed
+TYPED_TEST(DirectedGraphRepresentationsTests, removingEdgeDecreasesOutgoingDegree)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+    EXPECT_EQ(this->sut.getOutgoingDegree(firstNodeId), 1);
+    this->sut.removeEdge({firstNodeId, thirdNodeId});
+    EXPECT_EQ(this->sut.getOutgoingDegree(firstNodeId), 0);
+}
+
+TYPED_TEST(DirectedGraphRepresentationsTests, addingEdgeIncreasesIncommingDegree)
+{
+    this->sut.addNodes(fourNodes);
+    EXPECT_EQ(this->sut.getIncommingDegree(firstNodeId), 0);
+    this->sut.setEdge({thirdNodeId, firstNodeId});
+    EXPECT_EQ(this->sut.getIncommingDegree(firstNodeId), 1);
+}
+
+TYPED_TEST(DirectedGraphRepresentationsTests, removingEdgeDecreasesIncommingDegree)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdge({thirdNodeId, firstNodeId});
+    EXPECT_EQ(this->sut.getIncommingDegree(firstNodeId), 1);
+    this->sut.removeEdge({thirdNodeId, firstNodeId});
+    EXPECT_EQ(this->sut.getIncommingDegree(firstNodeId), 0);
+}
+
+TYPED_TEST(DirectedGraphRepresentationsTests, getOutgoingNeighborsOfReturnsCorrectOutgoingNeighbors)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+    this->sut.setEdge({secondNodeId, firstNodeId});
+    EXPECT_THAT(this->sut.getOutgoingNeighborsOf(firstNodeId), ElementsAre(thirdNodeId));
+}
+
+TYPED_TEST(DirectedGraphRepresentationsTests, getIncommingNeighborsOfReturnsCorrectIncommingNeighbors)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+    this->sut.setEdge({secondNodeId, firstNodeId});
+    EXPECT_THAT(this->sut.getIncommingNeighborsOf(firstNodeId), ElementsAre(secondNodeId));
+}
+
+TYPED_TEST(DirectedGraphRepresentationsTests, cyclicConnectionsCauseIncommingAndOutgoingNeighborsToBeTheSame)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+    this->sut.setEdge({thirdNodeId, firstNodeId});
+    EXPECT_EQ(this->sut.getIncommingNeighborsOf(firstNodeId), this->sut.getOutgoingNeighborsOf(firstNodeId));
+}
+
+TYPED_TEST(DirectedGraphRepresentationsTests, neighborsForCyclicConncetionsAreNotDuplicated)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+    this->sut.setEdge({thirdNodeId, firstNodeId});
+    EXPECT_THAT(this->sut.getOutgoingNeighborsOf(firstNodeId), ElementsAre(thirdNodeId));
+}
+
+TYPED_TEST(DirectedGraphRepresentationsTests, addingEdgeDoesNotProduceATwoWayConnection)
+{
+    this->sut.addNodes(fourNodes);
+
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+
+    EXPECT_EQ(this->sut.getOutgoingDegree(firstNodeId), 1);
+    EXPECT_EQ(this->sut.getIncommingDegree(thirdNodeId), 1);
+
+    EXPECT_EQ(this->sut.getOutgoingDegree(thirdNodeId), 0);
+    EXPECT_EQ(this->sut.getIncommingDegree(firstNodeId), 0);
+}
+
+TYPED_TEST(DirectedGraphRepresentationsTests, removingDirectedEdgeInACyclicDirectedConnectionRemoveOnlyOneWayOfTravel)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+    this->sut.setEdge({thirdNodeId, firstNodeId});
+
+    this->sut.removeEdge({firstNodeId, thirdNodeId});
+
+    EXPECT_EQ(this->sut.getOutgoingDegree(firstNodeId), 0);
+    EXPECT_EQ(this->sut.getIncommingDegree(thirdNodeId), 0);
+
+    EXPECT_EQ(this->sut.getOutgoingDegree(thirdNodeId), 1);
+    EXPECT_EQ(this->sut.getIncommingDegree(firstNodeId), 1);
+}
+
+template <typename GraphType>
+struct UndirectedGraphRepresentationsTests : public GraphRepresentationsTests<GraphType>
+{};
+
+TYPED_TEST_SUITE(UndirectedGraphRepresentationsTests, UndirectedGraphTypes);
+
+TYPED_TEST(UndirectedGraphRepresentationsTests, addingEdgeIncreasesBothIncommingAndOutgoingDegree)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+    EXPECT_EQ(this->sut.getIncommingDegree(firstNodeId), 1);
+    EXPECT_EQ(this->sut.getOutgoingDegree(firstNodeId), 1);
+}
+
+TYPED_TEST(UndirectedGraphRepresentationsTests, removingEdgeDecreasesBothIncommingAndOutgoingDegree)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+    this->sut.removeEdge({firstNodeId, thirdNodeId});
+
+    EXPECT_EQ(this->sut.getIncommingDegree(firstNodeId), 0);
+    EXPECT_EQ(this->sut.getOutgoingDegree(firstNodeId), 0);
+}
+
+TYPED_TEST(UndirectedGraphRepresentationsTests, getOutgoingNeighborsAndIncommingNeighborsReturnAllNeighbors)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+    this->sut.setEdge({secondNodeId, firstNodeId});
+
+    EXPECT_THAT(this->sut.getOutgoingNeighborsOf(firstNodeId), ElementsAre(secondNodeId, thirdNodeId));
+    EXPECT_THAT(this->sut.getIncommingNeighborsOf(firstNodeId), ElementsAre(secondNodeId, thirdNodeId));
+    EXPECT_THAT(this->sut.getNeighborsOf(firstNodeId), ElementsAre(secondNodeId, thirdNodeId));
+}
+
+TYPED_TEST(UndirectedGraphRepresentationsTests, addingEdgeCreatesATwoWayConnection)
+{
+    this->sut.addNodes(fourNodes);
+
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+
+    EXPECT_EQ(this->sut.findEdge({firstNodeId, thirdNodeId}).weight, 1);
+    EXPECT_EQ(this->sut.findEdge({thirdNodeId, firstNodeId}).weight, 1);
+}
+
+TYPED_TEST(UndirectedGraphRepresentationsTests, removingEdgeRemovesBothWaysOfTravel)
+{
+    this->sut.addNodes(fourNodes);
+    this->sut.setEdge({firstNodeId, thirdNodeId});
+
+    this->sut.removeEdge({firstNodeId, thirdNodeId});
+
+    EXPECT_EQ(this->sut.findEdge({firstNodeId, thirdNodeId}).weight, std::nullopt);
+    EXPECT_EQ(this->sut.findEdge({thirdNodeId, firstNodeId}).weight, std::nullopt);
+}
 } // namespace Graphs

@@ -123,9 +123,51 @@ uint32_t AdjList<directionality>::nodesAmount() const
 }
 
 template <GraphDirectionality directionality>
-uint32_t AdjList<directionality>::nodeDegree(NodeId node) const
+uint32_t AdjList<directionality>::getOutgoingDegree(NodeId nodeId) const
 {
-    return nodes[nodeMap.find(node)->second].size();
+    auto nodeMapping = nodeMap.find(nodeId);
+    if (nodeMapping == nodeMap.end())
+    {
+        return 0;
+    }
+    auto [_, nodeIdx] = *nodeMapping;
+    return nodes[nodeIdx].size();
+}
+
+template <GraphDirectionality directionality>
+uint32_t AdjList<directionality>::getIncommingDegree(NodeId nodeId) const
+{
+    uint32_t degree = 0;
+    for (auto& node : nodes)
+    {
+        auto nodeItr = std::ranges::find_if(node, [nodeId](auto& neighbor) {
+            return neighbor.destination == nodeId;
+        });
+        if (nodeItr != node.end())
+        {
+            ++degree;
+        }
+    }
+
+    return degree;
+}
+
+template <GraphDirectionality directionality>
+void AdjList<directionality>::reset()
+{
+    nodes.clear();
+    nodeMap.clear();
+}
+
+template <GraphDirectionality directionality>
+std::vector<EdgeInfo> AdjList<directionality>::getEdges() const
+{
+    std::vector<EdgeInfo> edges = {};
+    for (auto node : nodes)
+    {
+        std::ranges::copy(node, std::back_inserter(edges));
+    }
+    return edges;
 }
 
 template <GraphDirectionality directionality>
@@ -394,6 +436,10 @@ void AdjList<directionality>::setEdge(const EdgeInfo& edge)
     auto& [destinationNodeId, destinationNodeIndex] = *destinationNodeMapping;
 
     addNeighborAndSortRange(nodes[sourceNodeIndex], {edge.source, edge.destination, edge.weight.value_or(1)});
+    if constexpr (directionality == GraphDirectionality::undirected)
+    {
+        addNeighborAndSortRange(nodes[destinationNodeIndex], {edge.destination, edge.source, edge.weight.value_or(1)});
+    }
 }
 
 template <GraphDirectionality directionality>
@@ -414,10 +460,13 @@ void AdjList<directionality>::removeEdge(const EdgeInfo& edge)
     });
     nodes[sourceNodeIndex].erase(firstSrc, lastSrc);
 
-    auto [firstDst, lastDst] = std::ranges::remove_if(nodes[destinationNodeIndex], [&edge](auto& elem) {
-        return elem.destination == edge.source;
-    });
-    nodes[destinationNodeIndex].erase(firstDst, lastDst);
+    if constexpr (directionality == GraphDirectionality::undirected)
+    {
+        auto [firstDst, lastDst] = std::ranges::remove_if(nodes[destinationNodeIndex], [&edge](auto& elem) {
+            return elem.destination == edge.source;
+        });
+        nodes[destinationNodeIndex].erase(firstDst, lastDst);
+    }
 }
 
 template <GraphDirectionality directionality>
