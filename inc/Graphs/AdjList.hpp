@@ -35,6 +35,8 @@ public:
 
     virtual ~AdjList() = default;
 
+    static constexpr GraphDirectionality Directionality = directionality;
+
 private:
     std::string show() const override;
 

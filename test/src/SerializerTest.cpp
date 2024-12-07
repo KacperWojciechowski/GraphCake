@@ -12,6 +12,7 @@ struct SerializerTest : testing::Test
 {
     SerializerTest() = default;
 
+    SerializationHelper<GraphType> helper;
     using sut = Serializer;
 };
 
@@ -19,7 +20,7 @@ TYPED_TEST_SUITE(SerializerTest, GraphTypes);
 
 TYPED_TEST(SerializerTest, canSerializeLstFiles)
 {
-    auto [fileContent, referenceGraph] = makeSampleLstFile<TypeParam>();
+    auto [fileContent, referenceGraph] = this->helper.makeSampleLstFile();
     std::stringstream mockStream = {};
 
     SerializerTest<TypeParam>::sut::serializeLstFile(mockStream, referenceGraph);
@@ -29,7 +30,7 @@ TYPED_TEST(SerializerTest, canSerializeLstFiles)
 
 TYPED_TEST(SerializerTest, canSerializeMatFiles)
 {
-    auto [fileContent, referenceGraph] = makeSampleMatFile<TypeParam>();
+    auto [fileContent, referenceGraph] = this->helper.makeSampleMatFile();
     std::stringstream mockStream = {};
 
     SerializerTest<TypeParam>::sut::serializeMatFile(mockStream, referenceGraph);
@@ -39,7 +40,7 @@ TYPED_TEST(SerializerTest, canSerializeMatFiles)
 
 TYPED_TEST(SerializerTest, canSerializeGraphMlFiles)
 {
-    auto [fileContent, referenceGraph] = makeSampleGraphMlFile<TypeParam>();
+    auto [fileContent, referenceGraph] = this->helper.makeSampleGraphMlFile();
     std::stringstream mockStream = {};
 
     SerializerTest<TypeParam>::sut::serializeGraphMlFile(mockStream, referenceGraph);

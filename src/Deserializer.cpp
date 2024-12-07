@@ -145,12 +145,28 @@ public:
         }
 
         using regItr = std::sregex_iterator;
+        std::regex directionalityRegex("edgedefault=\"([a-z]+)\"");
         std::regex nodeRegex("<node id=\"n([0-9]+)\"/>");
         std::regex edgeRegex("<edge source=\"n([0-9]+)\" target=\"n([0-9]+)\"/>");
         std::vector<Graphs::EdgeInfo> nodes;
         Graphs::NodeId nodesCount = 0;
 
         bool incrementIds = false;
+
+        auto directionalityItr = regItr(content.begin(), content.end(), directionalityRegex);
+        if (directionalityItr != regItr())
+        {
+            std::ssub_match match = (*directionalityItr)[1];
+            auto directionalityMissmatch
+                = ((match.str() == "undirected" and GraphType::Directionality == Graphs::GraphDirectionality::directed)
+                   or (match.str() == "directed"
+                       and GraphType::Directionality == Graphs::GraphDirectionality::undirected));
+            if (directionalityMissmatch)
+            {
+                std::cerr << "[Deserializer] Graph directionality mismatch\n";
+                return GraphType{};
+            }
+        }
 
         for (auto itr = regItr(content.begin(), content.end(), nodeRegex); itr != regItr(); ++itr)
         {

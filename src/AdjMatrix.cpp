@@ -30,7 +30,7 @@ void AdjMatrix<directionality>::resizeMatrixToFitNodes(uint32_t nodesCount)
 template <GraphDirectionality directionality>
 GraphDirectionality AdjMatrix<directionality>::getDirectionality() const
 {
-    return directionality;
+    return Directionality;
 }
 
 template <GraphDirectionality directionality>

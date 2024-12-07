@@ -20,6 +20,8 @@ struct DeserializerTest : public testing::Test
                "0 2 3\n";
     }
 
+    SerializationHelper<GraphType> helper;
+
     using sut = Deserializer<GraphType>;
 };
 
@@ -27,7 +29,7 @@ TYPED_TEST_SUITE(DeserializerTest, GraphTypes);
 
 TYPED_TEST(DeserializerTest, canDeserializeLstFile)
 {
-    auto [fileContent, referenceGraph] = makeSampleLstFile<TypeParam>();
+    auto [fileContent, referenceGraph] = this->helper.makeSampleLstFile();
     std::stringstream mockStream(fileContent);
 
     auto graph = DeserializerTest<TypeParam>::sut::deserializeLstFile(mockStream);
@@ -37,7 +39,7 @@ TYPED_TEST(DeserializerTest, canDeserializeLstFile)
 
 TYPED_TEST(DeserializerTest, canDeserializeMatFile)
 {
-    auto [fileContent, referenceGraph] = makeSampleMatFile<TypeParam>();
+    auto [fileContent, referenceGraph] = this->helper.makeSampleMatFile();
     std::stringstream mockStream(fileContent);
 
     auto graph = DeserializerTest<TypeParam>::sut::deserializeMatFile(mockStream);
@@ -47,7 +49,7 @@ TYPED_TEST(DeserializerTest, canDeserializeMatFile)
 
 TYPED_TEST(DeserializerTest, canDeserializeGraphMlFile)
 {
-    auto [fileContent, referenceGraph] = makeSampleGraphMlFile<TypeParam>();
+    auto [fileContent, referenceGraph] = this->helper.makeSampleGraphMlFile();
     std::stringstream mockStream(fileContent);
 
     auto graph = DeserializerTest<TypeParam>::sut::deserializeGraphMlFile(mockStream);
@@ -57,7 +59,7 @@ TYPED_TEST(DeserializerTest, canDeserializeGraphMlFile)
 
 TYPED_TEST(DeserializerTest, deserializingEmptyLstFileReturnsEmptyGraph)
 {
-    auto [fileContent, referenceGraph] = makeSampleEmptyFile<TypeParam>();
+    auto [fileContent, referenceGraph] = this->helper.makeSampleEmptyFile();
     std::stringstream mockStream(fileContent);
 
     auto graph = DeserializerTest<TypeParam>::sut::deserializeLstFile(mockStream);
@@ -67,7 +69,7 @@ TYPED_TEST(DeserializerTest, deserializingEmptyLstFileReturnsEmptyGraph)
 
 TYPED_TEST(DeserializerTest, deserializingEmptyMatFileReturnsEmptyGraph)
 {
-    auto [fileContent, referenceGraph] = makeSampleEmptyFile<TypeParam>();
+    auto [fileContent, referenceGraph] = this->helper.makeSampleEmptyFile();
     std::stringstream mockStream(fileContent);
 
     auto graph = DeserializerTest<TypeParam>::sut::deserializeMatFile(mockStream);
@@ -77,7 +79,7 @@ TYPED_TEST(DeserializerTest, deserializingEmptyMatFileReturnsEmptyGraph)
 
 TYPED_TEST(DeserializerTest, deserializingEmptyGraphMlFileReturnsEmptyGraph)
 {
-    auto [fileContent, referenceGraph] = makeSampleEmptyFile<TypeParam>();
+    auto [fileContent, referenceGraph] = this->helper.makeSampleEmptyFile();
     std::stringstream mockStream(fileContent);
 
     auto graph = DeserializerTest<TypeParam>::sut::deserializeGraphMlFile(mockStream);
@@ -153,5 +155,15 @@ TYPED_TEST(DeserializerTest, deserializingGraphMlFileWithNoValuesReturnsEmptyGra
     auto graph = DeserializerTest<TypeParam>::sut::deserializeGraphMlFile(mockStream);
 
     EXPECT_EQ(graph, decltype(graph){});
+}
+
+TYPED_TEST(DeserializerTest, deserializingGraphMlFileWithissmatchedDirectionalityReturnEmptyGraph)
+{
+    auto [fileContent, referenceGraph] = this->helper.makeSampleDirectionalityMissmatchGraphMlFile();
+    std::stringstream mockStream(fileContent);
+
+    auto graph = DeserializerTest<TypeParam>::sut::deserializeGraphMlFile(mockStream);
+
+    EXPECT_EQ(graph, referenceGraph);
 }
 } // namespace Graphs

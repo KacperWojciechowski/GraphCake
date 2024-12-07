@@ -1,7 +1,8 @@
 set(UT_SOURCES GraphRepresentationsTests.cpp
                ColoringAlgorithmsTest.cpp
                DeserializerTest.cpp
-               SerializerTest.cpp)
+               SerializerTest.cpp
+               SerializationHelpers.cpp)
 
 add_executable(Ut ${UT_SOURCES})
 target_include_directories(Ut PUBLIC ${PROJECT_SOURCE_DIR}/inc ${PROJECT_SOURCE_DIR}/test/inc)

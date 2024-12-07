@@ -71,7 +71,9 @@ std::string processGraphIntoGraphMlRepresentation(const Graphs::Graph& graph)
 {
     std::stringstream out = {};
     out << makeGraphMlHeader();
-    out << "  <graph id=\"Graph\" edgedefault=\"undirected\">\n";
+    auto directionality
+        = graph.getDirectionality() == Graphs::GraphDirectionality::directed ? "directed" : "undirected";
+    out << std::format("  <graph id=\"Graph\" edgedefault=\"{}\">\n", directionality);
     for (auto& node : graph.getNodeIds())
     {
         out << std::format("    <node id=\"n{}\"/>\n", node - 1);

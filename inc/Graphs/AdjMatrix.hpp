@@ -38,6 +38,8 @@ public:
 
     virtual ~AdjMatrix() = default;
 
+    static constexpr GraphDirectionality Directionality = directionality;
+
 private:
     std::string show() const override;
     void resizeMatrixToFitNodes(uint32_t);
