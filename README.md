@@ -21,6 +21,8 @@ Algorithms planned to implement:
 - Depth-First Search
 - Breadth-First Search
 - Critical Path Method
+- Minimum spanning tree
+- Strongly connected components
 
 Additional currently available functionalities:
 - Benchmarking algorithms
