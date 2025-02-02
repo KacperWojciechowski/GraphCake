@@ -93,6 +93,23 @@ ColoringVector createColoringTable(const Permutation& nodes)
     return coloring;
 }
 
+std::vector<NodeId> generateLfCompliantPermutationOfNodes(const Graph& graph, const Permutation& nodes)
+{
+    std::vector<NodeId> permutatedNodes = {};
+    permutatedNodes.reserve(nodes.size());
+    auto maxDeg = graph.graphDegree();
+    for (auto degree = maxDeg; degree > 0; --degree)
+    {
+        auto nodesWithDegree
+            = nodes | std::views::filter([degree, &graph](auto nodeId) {
+                  return std::max(graph.getOutgoingDegree(nodeId), graph.getIncommingDegree(nodeId)) == degree;
+              });
+        std::ranges::copy(nodesWithDegree, std::back_inserter(permutatedNodes));
+    }
+
+    return permutatedNodes;
+}
+
 ColoringResult resizeAndInitializeResultStructure(const Permutation& nodes)
 {
     auto [colorId, coloringVector] = ColoringResult{};
@@ -100,32 +117,18 @@ ColoringResult resizeAndInitializeResultStructure(const Permutation& nodes)
     colorId = std::numeric_limits<ColorId>::min();
     return std::tie(colorId, coloringVector);
 }
-} // namespace
 
 template <bool isVerbose>
-void GreedyColoring<isVerbose>::operator()(const Graphs::Graph& graph)
+ColoringResult performCoreColoring(std::ostream& outStream, const Graph& graph, const Permutation& permutation)
 {
-    log<isVerbose>(*outStream, "Greedy coloring graph with {} nodes\n", graph.nodesAmount());
-    auto nodes = graph.getNodeIds();
+    log<isVerbose>(outStream, "Generated permutation of nodes: ");
+    printPermutationOfNodes<isVerbose>(outStream, permutation);
 
-    log<isVerbose>(*outStream, "Generated permutation of nodes: ");
-    printPermutationOfNodes<isVerbose>(*outStream, nodes);
+    ColoringResult result = {};
+    log<isVerbose>(*outStream, "{}\n", permutation.size());
+    result = resizeAndInitializeResultStructure(nodes);
 
-    log<isVerbose>(*outStream, "{}\n", nodes.size());
-    *result = resizeAndInitializeResultStructure(nodes);
-    auto& [maxColor, coloring] = *result;
-
-    for (auto& elem : coloring)
-    {
-        log<isVerbose>(*outStream, "Node: {}, Color: {}\n", elem.first, elem.second);
-    }
-
-    if (nodes.empty())
-    {
-        log<isVerbose>(*outStream, "Graph is empty, coloring is not possible\n");
-        return;
-    }
-
+    auto& [maxColor, coloring] = result;
     auto& [frontNodeId, frontNodeColor] = coloring.front();
     frontNodeColor = 0u;
 
@@ -133,14 +136,30 @@ void GreedyColoring<isVerbose>::operator()(const Graphs::Graph& graph)
 
     for (auto& [nodeId, nodeColor] : coloring | std::views::drop(1))
     {
-        auto color = findAvailableColorForCurrentNode(graph, coloring, nodeId);
-
-        nodeColor = color;
+        nodeColor = findAvailableColorForCurrentNode(graph, coloring, nodeId);
         log<isVerbose>(*outStream, "Coloring node {} with color {}\n", nodeId, nodeColor);
     }
 
     auto [_, maxColorId] = std::ranges::max(coloring, std::ranges::less{}, colorPredicate);
     maxColor = maxColorId;
+
+    return result;
+}
+} // namespace
+
+template <bool isVerbose>
+void GreedyColoring<isVerbose>::operator()(const Graphs::Graph& graph)
+{
+    if (nodes.empty())
+    {
+        log<isVerbose>(*outStream, "Graph is empty, coloring is not possible\n");
+        return;
+    }
+
+    log<isVerbose>(*outStream, "Greedy coloring graph with {} nodes\n", graph.nodesAmount());
+    auto& nodes = graph.getNodeIds();
+
+    *result = performCoreColoring(*outStream, graph, nodes);
 
     log<isVerbose>(*outStream, "Greedy coloring completed\n");
 }
@@ -164,5 +183,107 @@ std::string GreedyColoring<isVerbose>::getName()
 
 template class GreedyColoring<verbose>;
 template class GreedyColoring<notVerbose>;
+
+template <bool isVerbose>
+void LfColoring<isVerbose>::operator()(const Graphs::Graph&)
+{
+    if (nodes.empty())
+    {
+        log<isVerbose>(*outStream, "Graph is empty, coloring is not possible\n");
+        return;
+    }
+
+    log<isVerbose>(*outStream, "LF coloring graph with {} nodes\n", graph.nodesAmount());
+    auto& nodes = graph.getNodeIds();
+
+    auto permutatedNodes = generateLfCompliantPermutationOfNodes(nodes);
+    *result = performCoreColoring(*outStream, graph, permutatedNodes);
+
+    log<isVerbose>(*outStream, "LF coloring completed\n");
+}
+
+template <bool isVerbose>
+LfColoring<isVerbose>::LfColoring(std::shared_ptr<ColoringResult> resultContainer, std::ostream& out)
+    : result(std::move(resultContainer)), outStream{&out, ostreamDeleter}
+{
+    if (not result)
+    {
+        log<isVerbose>(*outStream, "Coloring result cannot be null");
+        throw std::invalid_argument{"Coloring result cannot be null"};
+    }
+}
+
+template <bool isVerbose>
+std::string LfColoring<isVerbose>::getName()
+{
+    return "LF coloring";
+}
+
+template class LfColoring<verbose>;
+template class LfColoring<notVerbose>;
+
+int32_t AdjList::lf_coloring(bool log)
+{
+    size_t deg = 0; // zmienna przechowuj�a aktualnie rozpatrywany stopie�
+    size_t nodes_count = this->node_map.size();
+
+    if (log)
+    {
+        std::cout << "LF coloring" << std::endl;
+    }
+
+    // iteruje po li�cie szukaj�c najwi�kszego stopnia
+    for (size_t i = 0; i < nodes_count; i++)
+    {
+        if (this->degrees[i] > deg)
+        {
+            deg = this->degrees[i];
+        }
+    }
+
+    // tworzy podstawowe zmienne
+    std::map<int, int> map; // mapa docelowa
+    uint32_t map_index = 0;
+
+    std::vector<int> v;
+
+    std::map<int, int>::iterator itr;
+
+    // iteruje po stopniach  w d�
+    for (deg; deg > -1; deg--)
+    {
+        v.clear();
+        for (itr = this->node_map.begin(); itr != this->node_map.end();
+             itr++) // przeszukuje ca�� list� w poszukiwaniu wierzcho�ka o danym stopniu
+        {
+            if (this->degrees[itr->second] == deg) // je�li znalaz�o
+            {
+                wiewerzcho�ek, wpisuje go do wektora
+                {
+                    v.push_back(itr->second);
+                }
+            }
+        }
+        // gdy wszystkie wierzcho�ki o zadanym stopniu s� wpisane do
+        wektora,
+            // generuje permutacj� dla nich a nast�pnie wpisuje je w nowej
+            kolejno�ci do mapy this->shuffle(v, log);
+        for (uint32_t i = 0; i < v.size(); i++)
+        {
+            map.insert(std::pair<int, int>(map_index, v[i]));
+            map_index++;
+        }
+    }
+    if (log)
+    {
+        for (itr = map.begin(); itr != map.end(); itr++)
+        {
+            std::cout << itr->second << " ";
+        }
+        std::cout << std::endl;
+    }
+    return this->greedy_coloring_core(&map, log); // przes�anie do greedy
+    coloring i zwr�cenie ilo�ci u�ytych kolor�w
+}
 
 } // namespace Graphs::Algorithm
