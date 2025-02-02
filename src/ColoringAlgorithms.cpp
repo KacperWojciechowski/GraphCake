@@ -110,6 +110,43 @@ std::vector<NodeId> generateLfCompliantPermutationOfNodes(const Graph& graph, co
     return permutatedNodes;
 }
 
+std::vector<NodeId> generateSlCompliantPermutationOfNodes(const Graph& graph, const Permutation& nodes)
+{
+    std::vector<NodeId> permutatedNodes = {};
+    permutatedNodes.reserve(nodes.size());
+
+    using DegreeInfo = std::pair<NodeId, uint32_t>;
+    auto adjustedDegrees = std::vector<DegreeInfo>{nodes.size()};
+
+    for (auto& [nodeId, degree] : adjustedDegrees)
+    {
+        degree = std::max(graph.getOutgoingDegree(nodeId), graph.getIncommingDegree(nodeId));
+    }
+
+    for (std::size_t i = 0; i < nodes.size(); ++i)
+    {
+        auto& [minDegreeNodeId, foundDegree]
+            = *std::ranges::min_element(adjustedDegrees, [](const auto& lhs, const auto& rhs) {
+                  return lhs.second < rhs.second;
+              });
+
+        permutatedNodes.push_back(minDegreeNodeId);
+        foundDegree = std::numeric_limits<uint32_t>::max();
+
+        auto neighbors = graph.getNeighborsOf(minDegreeNodeId);
+        for (auto& [nodeId, degree] : adjustedDegrees)
+        {
+            if (std::ranges::find(neighbors, nodeId) != neighbors.end())
+            {
+                degree--;
+            }
+        }
+    }
+
+    std::reverse(permutatedNodes.begin(), permutatedNodes.end());
+    return permutatedNodes;
+}
+
 ColoringResult resizeAndInitializeResultStructure(const Permutation& nodes)
 {
     auto [colorId, coloringVector] = ColoringResult{};
@@ -222,68 +259,38 @@ std::string LfColoring<isVerbose>::getName()
 template class LfColoring<verbose>;
 template class LfColoring<notVerbose>;
 
-int32_t AdjList::lf_coloring(bool log)
+template <bool isVerbose>
+void SlColoring<isVerbose>::operator()(const Graphs::Graph&)
 {
-    size_t deg = 0; // zmienna przechowuj�a aktualnie rozpatrywany stopie�
-    size_t nodes_count = this->node_map.size();
-
-    if (log)
+    if (nodes.empty())
     {
-        std::cout << "LF coloring" << std::endl;
+        log<isVerbose>(*outStream, "Graph is empty, coloring is not possible\n");
+        return;
     }
 
-    // iteruje po li�cie szukaj�c najwi�kszego stopnia
-    for (size_t i = 0; i < nodes_count; i++)
-    {
-        if (this->degrees[i] > deg)
-        {
-            deg = this->degrees[i];
-        }
-    }
+    log<isVerbose>(*outStream, "SL coloring graph with {} nodes\n", graph.nodesAmount());
+    auto& nodes = graph.getNodeIds();
 
-    // tworzy podstawowe zmienne
-    std::map<int, int> map; // mapa docelowa
-    uint32_t map_index = 0;
+    auto permutatedNodes = generateSlCompliantPermutationOfNodes(nodes);
+    *result = performCoreColoring(*outStream, graph, permutatedNodes);
 
-    std::vector<int> v;
-
-    std::map<int, int>::iterator itr;
-
-    // iteruje po stopniach  w d�
-    for (deg; deg > -1; deg--)
-    {
-        v.clear();
-        for (itr = this->node_map.begin(); itr != this->node_map.end();
-             itr++) // przeszukuje ca�� list� w poszukiwaniu wierzcho�ka o danym stopniu
-        {
-            if (this->degrees[itr->second] == deg) // je�li znalaz�o
-            {
-                wiewerzcho�ek, wpisuje go do wektora
-                {
-                    v.push_back(itr->second);
-                }
-            }
-        }
-        // gdy wszystkie wierzcho�ki o zadanym stopniu s� wpisane do
-        wektora,
-            // generuje permutacj� dla nich a nast�pnie wpisuje je w nowej
-            kolejno�ci do mapy this->shuffle(v, log);
-        for (uint32_t i = 0; i < v.size(); i++)
-        {
-            map.insert(std::pair<int, int>(map_index, v[i]));
-            map_index++;
-        }
-    }
-    if (log)
-    {
-        for (itr = map.begin(); itr != map.end(); itr++)
-        {
-            std::cout << itr->second << " ";
-        }
-        std::cout << std::endl;
-    }
-    return this->greedy_coloring_core(&map, log); // przes�anie do greedy
-    coloring i zwr�cenie ilo�ci u�ytych kolor�w
+    log<isVerbose>(*outStream, "SL coloring completed\n");
 }
 
+template <bool isVerbose>
+SlColoring<isVerbose>::SlColoring(std::shared_ptr<ColoringResult> resultContainer, std::ostream& out)
+    : result(std::move(resultContainer)), outStream{&out, ostreamDeleter}
+{
+    if (not result)
+    {
+        log<isVerbose>(*outStream, "Coloring result cannot be null");
+        throw std::invalid_argument{"Coloring result cannot be null"};
+    }
+}
+
+template <bool isVerbose>
+std::string SlColoring<isVerbose>::getName()
+{
+    return "SL coloring";
+}
 } // namespace Graphs::Algorithm

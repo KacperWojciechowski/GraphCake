@@ -59,4 +59,26 @@ private:
     std::shared_ptr<ColoringResult> result = {};
     [[maybe_unused]] std::unique_ptr<std::ostream, std::function<void(std::ostream*)>> outStream = {};
 };
+
+template <bool isVerbose>
+class SlColoring : public AlgorithmFunctor
+{
+public:
+    explicit SlColoring(std::shared_ptr<ColoringResult> resultContainer, std::ostream& out = std::cout);
+
+    SlColoring() = delete;
+    SlColoring(const SlColoring&) = delete;
+    SlColoring(SlColoring&&) = delete;
+
+    SlColoring& operator=(const SlColoring&) = delete;
+    SlColoring& operator=(SlColoring&&) = delete;
+
+    std::string getName() override;
+
+    void operator()(const Graphs::Graph&) override;
+
+private:
+    std::shared_ptr<ColoringResult> result = {};
+    [[maybe_unused]] std::unique_ptr<std::ostream, std::function<void(std::ostream*)>> outStream = {};
+};
 } // namespace Graphs::Algorithm
