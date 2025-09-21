@@ -24,10 +24,6 @@ Additional currently available functionalities:
         - edge weights
         - graph directionality
 
-## Licensing
-
-TODO
-
 ## Development
 
 Any user who would like to contribute to the library is free to do so **using a fork and posting a merge request** with new functionalities. In the nearby future, I will try to create a docker configuration which will allow contributors to set up the entire environment in a ready-to-use state.
