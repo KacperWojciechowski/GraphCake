@@ -187,14 +187,14 @@ ColoringResult performCoreColoring(std::ostream& outStream, const Graph& graph, 
 template <bool isVerbose>
 void GreedyColoring<isVerbose>::operator()(const Graphs::Graph& graph)
 {
-    if (nodes.empty())
+    if (graph.getNodeIds().empty())
     {
         log<isVerbose>(*outStream, "Graph is empty, coloring is not possible\n");
         return;
     }
 
     log<isVerbose>(*outStream, "Greedy coloring graph with {} nodes\n", graph.nodesAmount());
-    auto& nodes = graph.getNodeIds();
+    Permutation nodes = graph.getNodeIds();
 
     *result = performCoreColoring(*outStream, graph, nodes);
 
@@ -260,7 +260,7 @@ template class LfColoring<verbose>;
 template class LfColoring<notVerbose>;
 
 template <bool isVerbose>
-void SlColoring<isVerbose>::operator()(const Graphs::Graph&)
+void SlColoring<isVerbose>::operator()(const Graphs::Graph& graph)
 {
     if (nodes.empty())
     {
