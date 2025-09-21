@@ -10,19 +10,8 @@ GraphCase so far provides two basic graph representations - **adjacency matrix**
 
 Algorithms currently available in the library:
 - Greedy coloring
-
-Algorithms planned to implement:
 - LF coloring
 - SL coloring
-- Line graph conversion
-- Topological sort
-- Dijkstra algorithm
-- Bellman Ford algorithm
-- Depth-First Search
-- Breadth-First Search
-- Critical Path Method
-- Minimum spanning tree
-- Strongly connected components
 
 Additional currently available functionalities:
 - Benchmarking algorithms
@@ -34,9 +23,6 @@ Additional currently available functionalities:
         - edges
         - edge weights
         - graph directionality
-
-Additional planned functionalities:
-- Building graph representation from a monochromatic pixel map
 
 ## Licensing
 
