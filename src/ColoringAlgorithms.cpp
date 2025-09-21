@@ -93,6 +93,60 @@ ColoringVector createColoringTable(const Permutation& nodes)
     return coloring;
 }
 
+std::vector<NodeId> generateLfCompliantPermutationOfNodes(const Graph& graph, const Permutation& nodes)
+{
+    std::vector<NodeId> permutatedNodes = {};
+    permutatedNodes.reserve(nodes.size());
+    auto maxDeg = graph.graphDegree();
+    for (auto degree = maxDeg; degree > 0; --degree)
+    {
+        auto nodesWithDegree
+            = nodes | std::views::filter([degree, &graph](auto nodeId) {
+                  return std::max(graph.getOutgoingDegree(nodeId), graph.getIncommingDegree(nodeId)) == degree;
+              });
+        std::ranges::copy(nodesWithDegree, std::back_inserter(permutatedNodes));
+    }
+
+    return permutatedNodes;
+}
+
+std::vector<NodeId> generateSlCompliantPermutationOfNodes(const Graph& graph, const Permutation& nodes)
+{
+    std::vector<NodeId> permutatedNodes = {};
+    permutatedNodes.reserve(nodes.size());
+
+    using DegreeInfo = std::pair<NodeId, uint32_t>;
+    auto adjustedDegrees = std::vector<DegreeInfo>{nodes.size()};
+
+    for (auto& [nodeId, degree] : adjustedDegrees)
+    {
+        degree = std::max(graph.getOutgoingDegree(nodeId), graph.getIncommingDegree(nodeId));
+    }
+
+    for (std::size_t i = 0; i < nodes.size(); ++i)
+    {
+        auto& [minDegreeNodeId, foundDegree]
+            = *std::ranges::min_element(adjustedDegrees, [](const auto& lhs, const auto& rhs) {
+                  return lhs.second < rhs.second;
+              });
+
+        permutatedNodes.push_back(minDegreeNodeId);
+        foundDegree = std::numeric_limits<uint32_t>::max();
+
+        auto neighbors = graph.getNeighborsOf(minDegreeNodeId);
+        for (auto& [nodeId, degree] : adjustedDegrees)
+        {
+            if (std::ranges::find(neighbors, nodeId) != neighbors.end())
+            {
+                degree--;
+            }
+        }
+    }
+
+    std::reverse(permutatedNodes.begin(), permutatedNodes.end());
+    return permutatedNodes;
+}
+
 ColoringResult resizeAndInitializeResultStructure(const Permutation& nodes)
 {
     auto [colorId, coloringVector] = ColoringResult{};
@@ -100,32 +154,18 @@ ColoringResult resizeAndInitializeResultStructure(const Permutation& nodes)
     colorId = std::numeric_limits<ColorId>::min();
     return std::tie(colorId, coloringVector);
 }
-} // namespace
 
 template <bool isVerbose>
-void GreedyColoring<isVerbose>::operator()(const Graphs::Graph& graph)
+ColoringResult performCoreColoring(std::ostream& outStream, const Graph& graph, const Permutation& permutation)
 {
-    log<isVerbose>(*outStream, "Greedy coloring graph with {} nodes\n", graph.nodesAmount());
-    auto nodes = graph.getNodeIds();
+    log<isVerbose>(outStream, "Generated permutation of nodes: ");
+    printPermutationOfNodes<isVerbose>(outStream, permutation);
 
-    log<isVerbose>(*outStream, "Generated permutation of nodes: ");
-    printPermutationOfNodes<isVerbose>(*outStream, nodes);
+    ColoringResult result = {};
+    log<isVerbose>(*outStream, "{}\n", permutation.size());
+    result = resizeAndInitializeResultStructure(nodes);
 
-    log<isVerbose>(*outStream, "{}\n", nodes.size());
-    *result = resizeAndInitializeResultStructure(nodes);
-    auto& [maxColor, coloring] = *result;
-
-    for (auto& elem : coloring)
-    {
-        log<isVerbose>(*outStream, "Node: {}, Color: {}\n", elem.first, elem.second);
-    }
-
-    if (nodes.empty())
-    {
-        log<isVerbose>(*outStream, "Graph is empty, coloring is not possible\n");
-        return;
-    }
-
+    auto& [maxColor, coloring] = result;
     auto& [frontNodeId, frontNodeColor] = coloring.front();
     frontNodeColor = 0u;
 
@@ -133,14 +173,30 @@ void GreedyColoring<isVerbose>::operator()(const Graphs::Graph& graph)
 
     for (auto& [nodeId, nodeColor] : coloring | std::views::drop(1))
     {
-        auto color = findAvailableColorForCurrentNode(graph, coloring, nodeId);
-
-        nodeColor = color;
+        nodeColor = findAvailableColorForCurrentNode(graph, coloring, nodeId);
         log<isVerbose>(*outStream, "Coloring node {} with color {}\n", nodeId, nodeColor);
     }
 
     auto [_, maxColorId] = std::ranges::max(coloring, std::ranges::less{}, colorPredicate);
     maxColor = maxColorId;
+
+    return result;
+}
+} // namespace
+
+template <bool isVerbose>
+void GreedyColoring<isVerbose>::operator()(const Graphs::Graph& graph)
+{
+    if (graph.getNodeIds().empty())
+    {
+        log<isVerbose>(*outStream, "Graph is empty, coloring is not possible\n");
+        return;
+    }
+
+    log<isVerbose>(*outStream, "Greedy coloring graph with {} nodes\n", graph.nodesAmount());
+    Permutation nodes = graph.getNodeIds();
+
+    *result = performCoreColoring(*outStream, graph, nodes);
 
     log<isVerbose>(*outStream, "Greedy coloring completed\n");
 }
@@ -165,4 +221,76 @@ std::string GreedyColoring<isVerbose>::getName()
 template class GreedyColoring<verbose>;
 template class GreedyColoring<notVerbose>;
 
+template <bool isVerbose>
+void LfColoring<isVerbose>::operator()(const Graphs::Graph&)
+{
+    if (nodes.empty())
+    {
+        log<isVerbose>(*outStream, "Graph is empty, coloring is not possible\n");
+        return;
+    }
+
+    log<isVerbose>(*outStream, "LF coloring graph with {} nodes\n", graph.nodesAmount());
+    auto& nodes = graph.getNodeIds();
+
+    auto permutatedNodes = generateLfCompliantPermutationOfNodes(nodes);
+    *result = performCoreColoring(*outStream, graph, permutatedNodes);
+
+    log<isVerbose>(*outStream, "LF coloring completed\n");
+}
+
+template <bool isVerbose>
+LfColoring<isVerbose>::LfColoring(std::shared_ptr<ColoringResult> resultContainer, std::ostream& out)
+    : result(std::move(resultContainer)), outStream{&out, ostreamDeleter}
+{
+    if (not result)
+    {
+        log<isVerbose>(*outStream, "Coloring result cannot be null");
+        throw std::invalid_argument{"Coloring result cannot be null"};
+    }
+}
+
+template <bool isVerbose>
+std::string LfColoring<isVerbose>::getName()
+{
+    return "LF coloring";
+}
+
+template class LfColoring<verbose>;
+template class LfColoring<notVerbose>;
+
+template <bool isVerbose>
+void SlColoring<isVerbose>::operator()(const Graphs::Graph& graph)
+{
+    if (nodes.empty())
+    {
+        log<isVerbose>(*outStream, "Graph is empty, coloring is not possible\n");
+        return;
+    }
+
+    log<isVerbose>(*outStream, "SL coloring graph with {} nodes\n", graph.nodesAmount());
+    auto& nodes = graph.getNodeIds();
+
+    auto permutatedNodes = generateSlCompliantPermutationOfNodes(nodes);
+    *result = performCoreColoring(*outStream, graph, permutatedNodes);
+
+    log<isVerbose>(*outStream, "SL coloring completed\n");
+}
+
+template <bool isVerbose>
+SlColoring<isVerbose>::SlColoring(std::shared_ptr<ColoringResult> resultContainer, std::ostream& out)
+    : result(std::move(resultContainer)), outStream{&out, ostreamDeleter}
+{
+    if (not result)
+    {
+        log<isVerbose>(*outStream, "Coloring result cannot be null");
+        throw std::invalid_argument{"Coloring result cannot be null"};
+    }
+}
+
+template <bool isVerbose>
+std::string SlColoring<isVerbose>::getName()
+{
+    return "SL coloring";
+}
 } // namespace Graphs::Algorithm

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(Graphs)
 
-set(CMAKE_CXX_FLAGS "-std=c++2c")
+set(CMAKE_CXX_FLAGS "-std=c++23")
 
 add_subdirectory(src)
 add_subdirectory(test)
